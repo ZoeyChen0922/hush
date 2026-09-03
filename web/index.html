@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>中之人 · 直播变声器</title>
+<style>
+  :root{
+    --bg:#080b24;
+    --bg-2:#0d1130;
+    --line:#3b3f8f;
+    --line-glow:#4f46e5;
+    --text:#eef0ff;
+    --text-dim:#9aa0c8;
+    --accent:#6366f1;
+    --accent-2:#4338ca;
+    --radius:22px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(900px 600px at 22% 38%, rgba(80,60,200,.18), transparent 70%),
+      radial-gradient(700px 500px at 82% 45%, rgba(150,60,220,.14), transparent 70%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    padding:40px 28px;
+  }
+
+  .stage{
+    display:flex; align-items:stretch; gap:52px;
+    width:100%; max-width:1500px;
+  }
+
+  /* ---------- 左：主控台 ---------- */
+  .console{flex:1 1 auto; min-width:0; position:relative; display:flex; flex-direction:column}
+
+  .camera-card{
+    position:relative; flex:1;
+    aspect-ratio:1026/670;
+    border-radius:var(--radius);
+    border:1.5px solid rgba(99,102,241,.55);
+    background:#111536;
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(99,102,241,.12), 0 24px 70px rgba(0,0,0,.55), 0 0 60px rgba(99,102,241,.10);
+  }
+  .camera-card img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .camera-card .off-state{
+    position:absolute; inset:0;
+    display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    background:#0c1030; color:var(--text-dim); font-size:15px;
+  }
+  .camera-card.is-off img{opacity:0; }
+  .camera-card.is-off .off-state{display:flex}
+
+  .pill{
+    display:inline-flex; align-items:center; gap:10px;
+    padding:12px 20px;
+    border-radius:14px;
+    border:1px solid rgba(99,102,241,.5);
+    background:rgba(16,20,58,.72);
+    backdrop-filter:blur(14px);
+    font-size:16px; font-weight:500; letter-spacing:.2px;
+  }
+  .camera-input{position:absolute; top:18px; left:18px}
+
+  /* 控制条 */
+  .control-bar{
+    margin-top:18px;
+    display:flex; align-items:stretch;
+    border-radius:18px;
+    border:1.5px solid rgba(99,102,241,.5);
+    background:rgba(13,17,48,.75);
+    box-shadow:0 0 40px rgba(99,102,241,.10) inset, 0 14px 40px rgba(0,0,0,.4);
+    overflow:hidden;
+  }
+  .ctrl{
+    flex:1;
+    display:flex; align-items:center; justify-content:center; gap:16px;
+    padding:22px 12px;
+    background:none; border:0; cursor:pointer;
+    color:var(--text); font:inherit; font-size:19px; letter-spacing:.2px;
+    position:relative;
+    transition:background .18s, color .18s;
+  }
+  .ctrl + .ctrl::before{
+    content:''; position:absolute; left:0; top:22%; height:56%;
+    width:1px; background:rgba(99,102,241,.35);
+  }
+  .ctrl:hover{background:rgba(99,102,241,.10)}
+  .ctrl svg{flex:none}
+  .ctrl.is-muted{color:#6f74a4}
+  .ctrl.is-muted svg{opacity:.5}
+  .ctrl.is-active{color:#c7d2fe; background:rgba(99,102,241,.16)}
+  .ctrl.is-active svg{filter:drop-shadow(0 0 8px rgba(99,102,241,.9))}
+
+  /* ---------- Voice Mode 二级面板 ---------- */
+  .voice-panel{
+    position:absolute; left:0; right:0; bottom:0;
+    transform:translateY(12px) scale(.985);
+    opacity:0; pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    border-radius:20px 20px 0 0;
+    border:1.5px solid rgba(99,102,241,.5);
+    border-bottom:none;
+    background:rgba(13,17,48,.92);
+    backdrop-filter:blur(24px);
+    box-shadow:0 -8px 40px rgba(0,0,0,.5), 0 0 60px rgba(99,102,241,.12);
+    padding:22px 24px 18px;
+    z-index:5;
+  }
+  .voice-panel.open{opacity:1; transform:translateY(0) scale(1); pointer-events:auto}
+  .voice-panel.open + .control-bar{border-radius:0 0 18px 18px; border-top:none}
+  .panel-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .panel-title{font-size:15px; font-weight:600; letter-spacing:.4px; color:#c7d2fe}
+  .panel-close{
+    background:none;border:0;cursor:pointer;color:var(--text-dim);
+    font-size:20px; line-height:1; padding:4px 6px; border-radius:8px;
+  }
+  .panel-close:hover{background:rgba(255,255,255,.06); color:var(--text)}
+	  /* 模式切换 Tabs */
+	  .voice-tabs{
+	    display:flex; gap:4px;
+	    margin-bottom:16px;
+	    padding:4px;
+	    border-radius:12px;
+	    background:rgba(255,255,255,.04);
+	  }
+	  .vtab{
+	    flex:1; padding:8px 0;
+	    background:none; border:none; border-radius:10px;
+	    color:var(--text-dim); cursor:pointer;
+	    font:inherit; font-size:14px; font-weight:500;
+	    transition:all .16s;
+	  }
+	  .vtab:hover{color:var(--text)}
+	  .vtab.active{
+	    color:#fff;
+	    background:rgba(99,102,241,.22);
+	    box-shadow:0 0 12px rgba(99,102,241,.15);
+	  }
+
+	  /* Tab 内容面板 */
+	  .voice-tab-panel{display:none}
+	  .voice-tab-panel.active{display:block}
+
+	  /* 上传区域 */
+	  .upload-zone{
+	    display:flex; flex-direction:column; align-items:center; gap:8px;
+	    padding:28px 16px;
+	    border:1.5px dashed rgba(99,102,241,.35);
+	    border-radius:14px;
+	    cursor:pointer;
+	    transition:border-color .16s, background .16s;
+	  }
+	  .upload-zone:hover{border-color:rgba(99,102,241,.65); background:rgba(255,255,255,.03)}
+	  .upload-zone.drag-over{border-color:var(--accent); background:rgba(99,102,241,.10)}
+	  .upload-text{font-size:14px; color:#c7d2fe}
+	  .upload-hint{font-size:12px; color:var(--text-dim)}
+
+	  .upload-file{
+	    display:flex; align-items:center; justify-content:space-between;
+	    margin-top:12px; padding:10px 14px;
+	    border-radius:10px;
+	    background:rgba(99,102,241,.12);
+	    border:1px solid rgba(99,102,241,.3);
+	  }
+	  .file-name{font-size:13px; color:#c7d2fe; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+	  .file-remove{
+	    background:none;border:none;cursor:pointer;color:var(--text-dim);
+	    font-size:18px; padding:2px 6px; border-radius:6px;
+	  }
+	  .file-remove:hover{background:rgba(255,255,255,.08); color:#ff5e7a}
+
+	  .extract-btn{
+	    display:flex; align-items:center; justify-content:center; gap:8px;
+	    width:100%; margin-top:12px; padding:12px;
+	    border-radius:12px;
+	    border:1px solid rgba(99,102,241,.4);
+	    background:linear-gradient(135deg, rgba(99,102,241,.18), rgba(67,56,202,.10));
+	    color:#fff; cursor:pointer; font:inherit; font-size:15px; font-weight:600;
+	    transition:all .16s;
+	  }
+	  .extract-btn:hover:not(:disabled){border-color:var(--accent); background:linear-gradient(135deg, rgba(99,102,241,.3), rgba(67,56,202,.18))}
+	  .extract-btn:disabled{opacity:.4; cursor:not-allowed}
+
+	  .extract-status{
+	    margin-top:10px; padding:8px 14px;
+	    border-radius:8px;
+	    font-size:13px; text-align:center;
+	    background:rgba(99,102,241,.10);
+	    color:#c7d2fe;
+	  }
+	  .extract-status.success{background:rgba(34,197,94,.12); color:#4ade80}
+	  .extract-status.error{background:rgba(255,43,69,.12); color:#ff5e7a}
+
+
+  .voice-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:12px;
+  }
+  .voice-opt{
+    display:flex; flex-direction:column; align-items:flex-start; gap:6px;
+    padding:14px 16px;
+    border-radius:14px;
+    border:1px solid rgba(99,102,241,.28);
+    background:rgba(255,255,255,.03);
+    color:var(--text); cursor:pointer; font:inherit; text-align:left;
+    transition:border-color .16s, background .16s, transform .16s;
+  }
+  .voice-opt:hover{border-color:rgba(99,102,241,.65); transform:translateY(-2px)}
+  .voice-opt .name{font-size:15px; font-weight:500}
+  .voice-opt .desc{font-size:12px; color:var(--text-dim)}
+  .voice-opt.selected{
+    border-color:var(--accent);
+    background:linear-gradient(180deg, rgba(99,102,241,.22), rgba(67,56,202,.10));
+    box-shadow:0 0 22px rgba(99,102,241,.25);
+  }
+
+  .sliders{margin-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:18px 26px}
+  .slider-row label{
+    display:flex; justify-content:space-between;
+    font-size:13px; color:var(--text-dim); margin-bottom:8px;
+  }
+  .slider-row label b{color:#c7d2fe; font-weight:600}
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:4px; border-radius:4px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2)) no-repeat;
+    background-size:var(--fill,50%) 100%;
+    background-color:rgba(255,255,255,.10);
+    cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+    background:#fff; box-shadow:0 0 10px rgba(99,102,241,.9);
+  }
+
+  /* ---------- 右：手机预览 ---------- */
+  .phone{
+    flex:none; width:346px;
+    border-radius:48px;
+    padding:12px 10px;
+    background:linear-gradient(180deg,#3a3d4a 0%,#1b1d2c 30%,#1b1d2c 70%,#2a2d3a 100%);
+    box-shadow:0 30px 80px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .screen{
+    position:relative;
+    border-radius:38px;
+    overflow:hidden;
+    aspect-ratio:324/682;
+    background:linear-gradient(180deg,#3a2a5e,#1b1338 55%,#120c26);
+  }
+  .screen .vt{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:104%; display:block;
+  }
+  .screen::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, transparent 52%, rgba(18,12,38,.55) 70%, rgba(12,8,26,.92));
+    pointer-events:none;
+  }
+  .notch{
+    position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    width:104px; height:26px; border-radius:14px; background:#07070d; z-index:4;
+  }
+  .live-bar{
+    position:absolute; top:34px; left:14px; right:14px; z-index:3;
+    display:flex; align-items:center; gap:10px;
+  }
+  .live-badge{
+    background:#ff2b45; color:#fff; font-size:11px; font-weight:800; letter-spacing:.6px;
+    padding:4px 8px; border-radius:6px;
+  }
+  .timer{font-size:14px; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.7)}
+  .viewers{
+    margin-left:auto; display:flex; align-items:center; gap:5px;
+    font-size:13px; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.7);
+  }
+
+  .chat{
+    position:absolute; left:12px; right:78px; bottom:62px; z-index:3;
+    display:flex; flex-direction:column; gap:7px;
+  }
+  .msg{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(10,8,26,.55);
+    backdrop-filter:blur(6px);
+    border-radius:14px; padding:5px 10px 5px 5px;
+    font-size:12.5px;
+    animation:msgIn .35s ease both;
+  }
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .msg .av{width:20px;height:20px;border-radius:50%;flex:none;background:linear-gradient(135deg,#f3a5c0,#6366f1)}
+  .msg .who{color:#fff;font-weight:600}
+  .msg .txt{color:#e6e2ff}
+
+  .hearts{position:absolute; right:10px; bottom:66px; width:56px; height:230px; z-index:3; pointer-events:none}
+  .heart{position:absolute; bottom:0; font-size:22px; animation:float 3.4s ease-in forwards}
+  @keyframes float{
+    0%{opacity:0;transform:translateY(0) scale(.6)}
+    12%{opacity:1}
+    100%{opacity:0;transform:translateY(-220px) scale(1.05)}
+  }
+
+  .say-row{
+    position:absolute; left:12px; right:12px; bottom:14px; z-index:3;
+    display:flex; align-items:center; gap:10px;
+  }
+  .say-row .box{
+    flex:1; background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:20px; padding:10px 14px;
+    font-size:13px; color:#cfd0e6;
+    backdrop-filter:blur(10px);
+  }
+  .gift{font-size:22px; opacity:.95}
+
+  @media (max-width:1180px){
+    .stage{flex-direction:column; gap:34px}
+    .console{width:100%}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <!-- 左侧主控台 -->
+  <div class="console">
+    <div class="camera-card" id="cameraCard">
+      <img src="assets/camera.jpg" alt="Camera input">
+      <div class="off-state">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M2 2l20 20M16 10.5V7a1 1 0 00-1-1H8.5M4 6a1 1 0 00-1 1v10a1 1 0 001 1h11M16 13.5l6 3.5V7l-6 3.5"/>
+        </svg>
+        <span>Camera is off</span>
+      </div>
+      <div class="pill camera-input">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        Camera Input
+      </div>
+    </div>
+
+    <!-- Voice Mode 二级面板 -->
+    <div class="voice-panel" id="voicePanel">
+      <div class="panel-head">
+        <span class="panel-title">VOICE MODE</span>
+        <button class="panel-close" id="panelClose" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- 模式切换 Tabs -->
+      <div class="voice-tabs" id="voiceTabs">
+        <button class="vtab active" data-tab="original">Original</button>
+        <button class="vtab" data-tab="changer">Voice Changer</button>
+        <button class="vtab" data-tab="aivoice">AI Voice</button>
+      </div>
+
+      <!-- Voice Changer 面板 -->
+      <div class="voice-tab-panel active" id="tabChanger">
+        <div class="upload-zone" id="uploadZone">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="upload-text">Drop MP3 file here or click to upload</span>
+          <span class="upload-hint">Supports .mp3, .wav up to 10MB</span>
+          <input type="file" id="mp3Upload" accept="audio/mpeg,audio/wav" hidden>
+        </div>
+        <div class="upload-file" id="uploadFile" style="display:none">
+          <span class="file-name" id="fileName"></span>
+          <button class="file-remove" id="fileRemove">&times;</button>
+        </div>
+        <button class="extract-btn" id="extractBtn" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Extract Voice
+        </button>
+        <div class="extract-status" id="extractStatus" style="display:none"></div>
+      </div>
+
+      <!-- AI Voice 面板 -->
+      <div class="voice-tab-panel" id="tabAIVoice">
+        <div class="voice-grid" id="voiceGrid">
+          <button class="voice-opt selected" data-voice="original">
+            <span class="name">Original</span><span class="desc">No effect</span>
+          </button>
+          <button class="voice-opt" data-voice="anime">
+            <span class="name">Anime Girl</span><span class="desc">Anime style</span>
+          </button>
+          <button class="voice-opt" data-voice="loli">
+            <span class="name">Loli</span><span class="desc">Soft high pitch</span>
+          </button>
+          <button class="voice-opt" data-voice="mature">
+            <span class="name">Mature</span><span class="desc">Deep mature</span>
+          </button>
+          <button class="voice-opt" data-voice="male">
+            <span class="name">Male</span><span class="desc">Youthful male</span>
+          </button>
+          <button class="voice-opt" data-voice="custom">
+            <span class="name">Custom</span><span class="desc">Custom voice</span>
+          </button>
+        </div>
+
+        <div class="sliders">
+          <div class="slider-row">
+            <label>Pitch <b id="pitchVal">0</b></label>
+            <input type="range" id="pitch" min="-12" max="12" value="0" style="--fill:50%">
+          </div>
+          <div class="slider-row">
+            <label>Intensity <b id="intVal">60%</b></label>
+            <input type="range" id="intensity" min="0" max="100" value="60" style="--fill:60%">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 控制条 -->
+    <div class="control-bar">
+      <button class="ctrl" id="camBtn">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="6" width="13" height="12" rx="2"/><path d="M15 11l7-4v10l-7-4z"/>
+        </svg>
+        <span id="camLabel">Camera On</span>
+      </button>
+
+      <button class="ctrl" id="micBtn">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4M8 22h8"/>
+        </svg>
+        <span id="micLabel">Mic On</span>
+      </button>
+
+      <button class="ctrl" id="voiceBtn">
+        <svg width="30" height="26" viewBox="0 0 30 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M3 10v6M8 6v14M13 2v22M18 7v12M23 11v4M28 9v8"/>
+        </svg>
+        <span>Voice Mode</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 右侧手机预览 -->
+  <div class="phone">
+    <div class="screen">
+      <img class="vt" src="assets/vtuber.jpg" alt="Virtual avatar">
+      <div class="notch"></div>
+
+      <div class="live-bar">
+        <span class="live-badge">LIVE</span>
+        <span class="timer" id="timer">00:36:12</span>
+        <span class="viewers">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>
+          </svg>
+          12.5K
+        </span>
+      </div>
+
+      <div class="chat" id="chat"></div>
+      <div class="hearts" id="hearts"></div>
+
+      <div class="say-row">
+        <div class="box">Say something...</div>
+        <span class="gift">🎁</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---- 控制条 ---- */
+const camBtn = document.getElementById('camBtn');
+const camCard = document.getElementById('cameraCard');
+const camLabel = document.getElementById('camLabel');
+camBtn.onclick = () => {
+  const off = camCard.classList.toggle('is-off');
+  camBtn.classList.toggle('is-muted', off);
+  camLabel.textContent = off ? 'Camera Off' : 'Camera On';
+};
+
+const micBtn = document.getElementById('micBtn');
+const micLabel = document.getElementById('micLabel');
+micBtn.onclick = () => {
+  const off = micBtn.classList.toggle('is-muted');
+  micLabel.textContent = off ? 'Mic Off' : 'Mic On';
+};
+
+/* ---- Voice Mode Tabs ---- */
+const voiceTabs = document.getElementById('voiceTabs');
+voiceTabs.addEventListener('click', (e) => {
+  const tab = e.target.closest('.vtab');
+  if (!tab) return;
+  document.querySelectorAll('.vtab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.querySelectorAll('.voice-tab-panel').forEach(p => p.classList.remove('active'));
+  var targetId;
+  if (tab.dataset.tab === 'changer') targetId = 'tabChanger';
+  else if (tab.dataset.tab === 'aivoice') targetId = 'tabAIVoice';
+  else targetId = null;
+  if (targetId) document.getElementById(targetId).classList.add('active');
+});
+
+/* ---- File Upload ---- */
+const uploadZone = document.getElementById('uploadZone');
+const mp3Upload = document.getElementById('mp3Upload');
+const uploadFile = document.getElementById('uploadFile');
+const fileName = document.getElementById('fileName');
+const fileRemove = document.getElementById('fileRemove');
+const extractBtn = document.getElementById('extractBtn');
+const extractStatus = document.getElementById('extractStatus');
+
+uploadZone.addEventListener('click', () => mp3Upload.click());
+uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+mp3Upload.addEventListener('change', () => { if (mp3Upload.files.length) handleFile(mp3Upload.files[0]); });
+
+function handleFile(file) {
+  if (!file.type.match(/audio\/(mpeg|wav|mp4|ogg)/)) {
+    showStatus('Unsupported file type. Please use .mp3 or .wav', 'error');
+    return;
+  }
+  uploadZone.style.display = 'none';
+  uploadFile.style.display = 'flex';
+  fileName.textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+  extractBtn.disabled = false;
+  extractStatus.style.display = 'none';
+}
+fileRemove.addEventListener('click', () => {
+  uploadZone.style.display = 'flex';
+  uploadFile.style.display = 'none';
+  mp3Upload.value = '';
+  extractBtn.disabled = true;
+  extractStatus.style.display = 'none';
+});
+
+/* ---- Extract Voice ---- */
+extractBtn.addEventListener('click', () => {
+  extractStatus.style.display = 'block';
+  extractStatus.className = 'extract-status';
+  extractStatus.textContent = 'Extracting voice...';
+  extractBtn.disabled = true;
+  setTimeout(() => {
+    extractStatus.className = 'extract-status success';
+    extractStatus.textContent = 'Voice extracted successfully! Ready to apply.';
+    extractBtn.disabled = false;
+  }, 2000);
+});
+
+function showStatus(msg, type) {
+  extractStatus.style.display = 'block';
+  extractStatus.className = 'extract-status ' + type;
+  extractStatus.textContent = msg;
+  setTimeout(() => { extractStatus.style.display = 'none'; }, 3000);
+}
+
+/* ---- Voice Mode 面板 ---- */
+const voiceBtn = document.getElementById('voiceBtn');
+const panel = document.getElementById('voicePanel');
+voiceBtn.onclick = (e) => {
+  e.stopPropagation();
+  const open = panel.classList.toggle('open');
+  voiceBtn.classList.toggle('is-active', open);
+};
+document.getElementById('panelClose').onclick = () => {
+  panel.classList.remove('open');
+  voiceBtn.classList.remove('is-active');
+};
+document.addEventListener('click', (e) => {
+  if (!panel.contains(e.target) && !voiceBtn.contains(e.target)) {
+    panel.classList.remove('open');
+    voiceBtn.classList.remove('is-active');
+  }
+});
+
+document.getElementById('voiceGrid').addEventListener('click', (e) => {
+  const opt = e.target.closest('.voice-opt');
+  if (!opt) return;
+  document.querySelectorAll('.voice-opt').forEach(o => o.classList.remove('selected'));
+  opt.classList.add('selected');
+});
+
+function bindSlider(id, valId, fmt) {
+  const el = document.getElementById(id), out = document.getElementById(valId);
+  const sync = () => {
+    const pct = (el.value - el.min) / (el.max - el.min) * 100;
+    el.style.setProperty('--fill', pct + '%');
+    out.textContent = fmt(el.value);
+  };
+  el.addEventListener('input', sync); sync();
+}
+bindSlider('pitch', 'pitchVal', v => (v > 0 ? '+' : '') + v);
+bindSlider('intensity', 'intVal', v => v + '%');
+
+/* ---- 手机预览动效 ---- */
+let secs = 36 * 60 + 12;
+const timer = document.getElementById('timer');
+setInterval(() => {
+  secs++;
+  const h = String(Math.floor(secs / 3600)).padStart(2, '0');
+  const m = String(Math.floor(secs % 3600 / 60)).padStart(2, '0');
+  const s = String(secs % 60).padStart(2, '0');
+  timer.textContent = `${h}:${m}:${s}`;
+}, 1000);
+
+const MSGS = [
+  ['Aki', 'かわいい！'], ['Yeme', '神回！！'], ['Riku', '応援してる🔥'],
+  ['Mio', '声すき'], ['Ken', '888888'], ['Sora', 'てぇてぇ'],
+];
+const chat = document.getElementById('chat');
+function addMsg() {
+  const [who, txt] = MSGS[Math.floor(Math.random() * MSGS.length)];
+  const el = document.createElement('div');
+  el.className = 'msg';
+  el.innerHTML = `<span class="av"></span><span class="who">${who}:</span><span class="txt">${txt}</span>`;
+  chat.appendChild(el);
+  while (chat.children.length > 3) chat.removeChild(chat.firstChild);
+}
+addMsg(); addMsg(); addMsg();
+setInterval(addMsg, 2600);
+
+const hearts = document.getElementById('hearts');
+const COLORS = ['❤️', '🤍', '💜'];
+setInterval(() => {
+  const h = document.createElement('span');
+  h.className = 'heart';
+  h.textContent = COLORS[Math.floor(Math.random() * COLORS.length)];
+  h.style.right = Math.random() * 24 + 'px';
+  hearts.appendChild(h);
+  setTimeout(() => h.remove(), 3500);
+}, 620);
+</script>
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio Console</title>
+<style>
+  :root{
+    --bg:#070710;--rail:#0c0b15;--card:rgba(255,255,255,.035);--card-line:rgba(255,255,255,.08);
+    --field:rgba(255,255,255,.05);--field-line:rgba(255,255,255,.10);
+    --text:#f4f3fb;--dim:#948fb4;--faint:#6f6b8c;
+    --violet:#6366f1;--violet-2:#4338ca;--pink:#ff6ea9;--ok:#57e0a8;--live:#ff3d5e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;color:var(--text);
+    background:radial-gradient(1100px 760px at 20% 22%, rgba(80,62,190,.14), transparent 64%),
+      radial-gradient(820px 620px at 88% 80%, rgba(150,80,210,.10), transparent 62%),var(--bg);
+    min-height:100vh;-webkit-font-smoothing:antialiased}
+  .app{display:flex;width:100%;min-height:100vh}
+
+  /* rail */
+  .rail{width:250px;flex:none;background:var(--rail);border-right:1px solid var(--card-line);
+    display:flex;flex-direction:column;padding:34px 20px}
+  .rail .kicker{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--faint);padding:0 14px 18px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav a{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:13px;font-size:16px;
+    color:var(--dim);text-decoration:none;cursor:pointer;user-select:none}
+  .nav a svg{width:21px;height:21px}
+  .nav a:hover{background:rgba(255,255,255,.03);color:var(--text)}
+  .nav a.on{background:rgba(99,102,241,.14);color:#c7d2fe}
+  .nav a.on svg{color:var(--violet)}
+  .rail .foot{margin-top:auto;display:flex;align-items:center;gap:12px;padding:14px 12px;border-top:1px solid var(--card-line)}
+  .rail .foot .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ff9ac0)}
+  .rail .foot .t1{font-size:14px;font-weight:500}.rail .foot .t2{font-size:12px;color:var(--faint)}
+
+  /* main + pages */
+  .main{flex:1;min-width:0;padding:40px 44px;display:flex;flex-direction:column}
+  .page{display:none;flex:1;min-height:0;flex-direction:column}
+  .page.active{display:flex}
+  .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+  .head h1{font-size:29px;font-weight:600}
+  .head p{font-size:15px;color:var(--dim);margin-top:8px}
+  .actions{display:flex;gap:12px}
+  .btn{padding:13px 24px;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer}
+  .btn.ghost{background:var(--field);border:1px solid var(--field-line);color:var(--text)}
+  .btn.primary{background:linear-gradient(150deg,var(--violet),var(--violet-2));color:#fff;
+    box-shadow:0 10px 26px rgba(99,102,241,.38);border:none;display:flex;align-items:center;gap:9px}
+  .btn.primary svg{width:18px;height:18px}
+
+  .content{flex:1;display:flex;gap:30px;min-height:0}
+  .col{display:flex;flex-direction:column;gap:22px}
+  .col.forms{flex:1;min-width:0}
+  .card{background:var(--card);border:1px solid var(--card-line);border-radius:20px;padding:24px 30px}
+  .card > .ct{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .card > .ct .ic{width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,.14);
+    display:flex;align-items:center;justify-content:center;color:var(--violet)}
+  .card > .ct .ic svg{width:20px;height:20px}
+  .card > .ct h3{font-size:18px;font-weight:600}
+  .card > .ct small{font-size:13px;color:var(--faint);margin-left:auto}
+  .card > .ct .sw{margin-left:auto}
+
+  .field-label{font-size:13px;color:var(--dim);margin-bottom:10px;display:block}
+  .input{width:100%;background:var(--field);border:1px solid var(--field-line);border-radius:12px;
+    padding:14px 16px;font-size:15px;color:var(--text);display:flex;align-items:center;gap:10px}
+  .input.sel{justify-content:space-between}
+  .input.sel svg{width:16px;height:16px;color:var(--dim)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+  /* avatar */
+  .av-row{display:flex;gap:26px}
+  .av-thumb{width:164px;height:164px;flex:none;border-radius:16px;overflow:hidden;position:relative;border:1px solid var(--card-line)}
+  .av-thumb img{width:100%;height:100%;object-fit:cover}
+  .av-thumb .edit{position:absolute;right:9px;bottom:9px;background:rgba(10,8,20,.7);backdrop-filter:blur(6px);
+    border-radius:9px;padding:7px 11px;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer}
+  .av-thumb .edit svg{width:13px;height:13px}
+  .av-fields{flex:1;display:flex;flex-direction:column;gap:20px}
+  .chips{display:flex;gap:9px;flex-wrap:wrap}
+  .chip{padding:9px 16px;border-radius:20px;font-size:13px;background:var(--field);border:1px solid var(--field-line);color:var(--dim);cursor:pointer}
+  .chip.on{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.4);color:#c7d2fe}
+  .voice-preview{display:flex;align-items:center;gap:18px;background:var(--field);border:1px solid var(--field-line);
+    border-radius:14px;padding:16px 18px;margin-top:4px}
+  .play{width:46px;height:46px;flex:none;border-radius:50%;background:linear-gradient(150deg,var(--violet),var(--violet-2));
+    display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(99,102,241,.35);cursor:pointer}
+  .play svg{width:18px;height:18px;margin-left:2px}
+  .wave{display:flex;align-items:center;gap:3px;height:32px;flex:1}
+  .wave span{width:3px;border-radius:3px;background:var(--violet);opacity:.85}
+  .voice-preview .lbl{font-size:14px;color:var(--dim)}
+  .slider .lb{display:flex;justify-content:space-between;font-size:13px;color:var(--dim);margin-bottom:10px}
+  .slider .lb b{color:#c7d2fe;font-weight:600}
+  .track{height:5px;border-radius:5px;background:rgba(255,255,255,.10);position:relative}
+  .track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:linear-gradient(90deg,var(--violet),var(--violet-2))}
+  .track .knob{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 2px 8px rgba(0,0,0,.4)}
+
+  /* user */
+  .switch{width:50px;height:28px;border-radius:20px;background:var(--field);border:1px solid var(--field-line);position:relative;flex:none;cursor:pointer}
+  .switch.on{background:linear-gradient(150deg,var(--violet),var(--violet-2));border-color:transparent}
+  .switch .kn{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff}
+  .switch.on .kn{left:26px}
+  .set-row{display:flex;align-items:center;gap:16px;padding:15px 0;border-top:1px solid var(--card-line)}
+  .set-row .tx{flex:1}
+  .set-row .tx .a{font-size:15px;font-weight:500}
+  .set-row .tx .b{font-size:12.5px;color:var(--faint);margin-top:3px}
+  .meter{height:8px;border-radius:6px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;flex:1}
+  .meter .f{position:absolute;left:0;top:0;bottom:0;width:62%;border-radius:6px;background:linear-gradient(90deg,var(--ok),var(--violet))}
+  .tiles{display:flex;gap:16px}
+  .tile{flex:1;display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 16px;
+    border-radius:16px;background:var(--field);border:1px solid var(--field-line);color:var(--dim);cursor:pointer}
+  .tile .tic{width:54px;height:54px;border-radius:15px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;color:var(--dim)}
+  .tile .tic svg{width:27px;height:27px}
+  .tile .nm{font-size:15px;font-weight:500}
+  .tile.on{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.5);color:#c7d2fe}
+  .tile.on .tic{background:linear-gradient(150deg,var(--violet),var(--violet-2));color:#fff}
+
+  /* liveroom */
+  .scenes{display:flex;gap:16px;flex-wrap:wrap}
+  .scene{width:174px;height:106px;border-radius:13px;position:relative;overflow:hidden;border:1px solid var(--field-line);cursor:pointer}
+  .scene.on{border:2px solid var(--violet);box-shadow:0 0 0 3px rgba(99,102,241,.18)}
+  .scene .nm{position:absolute;left:0;right:0;bottom:0;padding:9px 11px;font-size:12px;font-weight:500;background:linear-gradient(transparent,rgba(0,0,0,.65))}
+  .scene .chk{position:absolute;top:9px;right:9px;width:22px;height:22px;border-radius:50%;background:var(--violet);display:flex;align-items:center;justify-content:center}
+  .scene .chk svg{width:13px;height:13px}
+  .scene.up{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;border:1.5px dashed rgba(99,102,241,.4);background:rgba(99,102,241,.05);color:var(--dim)}
+  .scene.up .u{width:34px;height:34px;border-radius:10px;background:rgba(99,102,241,.16);display:flex;align-items:center;justify-content:center;color:var(--violet)}
+  .scene.up .u svg{width:19px;height:19px}
+  .scene.up span{font-size:12px}
+  .seg{display:inline-flex;gap:5px;padding:6px;border-radius:13px;background:var(--field);border:1px solid var(--field-line);width:100%}
+  .seg span{flex:1;text-align:center;padding:12px 0;border-radius:9px;font-size:14px;color:var(--dim);cursor:pointer}
+  .seg span.on{background:linear-gradient(150deg,var(--violet),var(--violet-2));color:#fff}
+  .toggles{display:grid;grid-template-columns:1fr 1fr;gap:6px 34px}
+
+  /* preview column */
+  .col.side{width:456px;flex:none}
+  .prev-card{background:var(--card);border:1px solid var(--card-line);border-radius:22px;padding:24px;display:flex;flex-direction:column;flex:1}
+  .prev-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .prev-head .t{font-size:15px;font-weight:600}
+  .prev-head .tag{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ok)}
+  .prev-head .tag i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  .prev-head .tag.priv{color:var(--dim)}
+  .prev-head .tag.priv svg{width:15px;height:15px}
+  .monitor{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--card-line);aspect-ratio:16/10}
+  .monitor img{width:100%;height:100%;object-fit:cover;display:block}
+  .monitor .badge{position:absolute;top:14px;left:14px;display:flex;align-items:center;gap:8px;background:rgba(10,8,20,.55);
+    backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:8px 13px;font-size:13px;font-weight:500}
+  .monitor .badge i{width:9px;height:9px;border-radius:50%;background:var(--live);box-shadow:0 0 10px var(--live)}
+  .prev-note{margin-top:18px;font-size:13px;color:var(--faint);line-height:1.65;text-align:center}
+  /* monitor stack: chat + gift rank */
+  .ph2{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .ph2 .t{font-size:16px;font-weight:600}
+  .ph2 .r{font-size:13px;color:var(--faint);display:flex;align-items:center;gap:7px}
+  .ph2 .r i{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 10px var(--live)}
+  .ph2 .r svg{width:14px;height:14px}
+  .mon-sm{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--card-line);aspect-ratio:16/9}
+  .mon-sm img{width:100%;height:100%;object-fit:cover;display:block}
+  .mon-sm .badge{position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:7px;background:rgba(10,8,20,.55);
+    backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px 11px;font-size:12px;font-weight:500}
+  .mon-sm .badge i{width:8px;height:8px;border-radius:50%;background:var(--live);box-shadow:0 0 9px var(--live)}
+  .chatlist{display:flex;flex-direction:column;gap:13px}
+  .crow{display:flex;align-items:center;gap:9px;font-size:14px;line-height:1.3}
+  .crow .av{width:24px;height:24px;border-radius:50%;flex:none}
+  .crow .nm{font-weight:600;color:#b9b4dd;flex:none}
+  .crow .msg{color:var(--text)}
+  .rank{display:flex;flex-direction:column}
+  .rrow{display:flex;align-items:center;gap:13px;padding:9px 0;border-top:1px solid var(--card-line)}
+  .rrow:first-child{border-top:none}
+  .rrow .no{width:20px;text-align:center;font-size:15px;font-weight:700;color:var(--faint)}
+  .rrow .av{width:34px;height:34px;border-radius:50%;flex:none}
+  .rrow .nm{flex:1;font-size:14px;font-weight:500}
+  .rrow .amt{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--pink)}
+  .rrow .amt svg{width:15px;height:15px}
+  .phone{margin:0 auto;width:306px;padding:9px;border-radius:40px;background:linear-gradient(155deg,#322d47,#141219 46%,#2e2942);box-shadow:0 30px 70px rgba(0,0,0,.55)}
+  .screen{position:relative;border-radius:32px;overflow:hidden;height:626px;background:#150e26}
+  .screen .vt{position:absolute;top:0;left:50%;transform:translateX(-50%);width:106%}
+  .grad{position:absolute;inset:0;background:linear-gradient(180deg,transparent 46%,rgba(12,8,26,.5) 66%,rgba(9,6,20,.94))}
+  .notch{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:84px;height:20px;border-radius:11px;background:#04040a;z-index:4}
+  .ptop{position:absolute;top:28px;left:12px;right:12px;z-index:3;display:flex;align-items:center;gap:7px}
+  .lbadge{background:var(--live);color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;padding:4px 7px;border-radius:6px}
+  .dur{font-size:11px;font-weight:600}
+  .vw{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;background:rgba(9,7,20,.5);padding:4px 8px;border-radius:14px}
+  .vw svg{width:11px;height:11px}
+  .prail{position:absolute;right:9px;bottom:108px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:15px}
+  .prail .b{width:38px;height:38px;border-radius:50%;background:rgba(18,13,32,.55);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+  .prail .b svg{width:19px;height:19px}
+  .prail .b.heart{color:var(--pink)}.prail .b.gift{background:linear-gradient(150deg,var(--pink),var(--violet-2));border:none;color:#fff}
+  .pchat{position:absolute;left:12px;right:60px;bottom:56px;z-index:3;display:flex;flex-direction:column;gap:6px}
+  .pmsg{display:flex;align-items:center;gap:6px;background:rgba(9,7,22,.5);border-radius:11px;padding:5px 9px 5px 5px;font-size:11px;width:fit-content}
+  .pmsg .a{width:17px;height:17px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#ff9ac0)}
+  .pmsg .w{font-weight:700}
+  .psay{position:absolute;left:12px;right:12px;bottom:13px;z-index:3;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:10px 14px;font-size:11px;color:#c7c4e2}
+
+	  /* Voice mode panels */
+	  .vmode-panel{animation:vmIn .2s ease}
+	  @keyframes vmIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+	  .vm-upload{
+	    display:flex; flex-direction:column; align-items:center; gap:6px;
+	    padding:24px 16px; border:1.5px dashed rgba(99,102,241,.3);
+	    border-radius:12px; cursor:pointer; transition:border-color .16s, background .16s;
+	  }
+	  .vm-upload:hover{border-color:rgba(99,102,241,.6); background:rgba(255,255,255,.02)}
+	  .vm-upload.drag{border-color:var(--violet); background:rgba(99,102,241,.08)}
+	  .vm-upload span{font-size:13px; color:#c7d2fe}
+	  .vm-upload small{font-size:11px; color:var(--faint)}
+	  .vm-file{
+	    display:flex; align-items:center; justify-content:space-between;
+	    margin-top:10px; padding:9px 12px; border-radius:10px;
+	    background:rgba(99,102,241,.10); border:1px solid rgba(99,102,241,.25);
+	  }
+	  .vm-file span{font-size:12px; color:#c7d2fe}
+	  .vm-file button{background:none;border:none;cursor:pointer;color:var(--dim);font-size:17px}
+	  .vm-file button:hover{color:#ff5e7a}
+	  .vm-extract{
+	    display:flex; align-items:center; justify-content:center; gap:7px;
+	    width:100%; margin-top:10px; padding:11px; border-radius:11px;
+	    border:1px solid rgba(99,102,241,.35);
+	    background:linear-gradient(135deg, rgba(99,102,241,.16), rgba(67,56,202,.08));
+	    color:#fff; cursor:pointer; font:inherit; font-size:14px; font-weight:600;
+	    transition:all .16s;
+	  }
+	  .vm-extract:hover:not(:disabled){border-color:var(--violet); background:linear-gradient(135deg, rgba(99,102,241,.28), rgba(67,56,202,.16))}
+	  .vm-extract:disabled{opacity:.35; cursor:not-allowed}
+	  .vm-status{
+	    margin-top:8px; padding:7px 12px; border-radius:8px;
+	    font-size:12px; text-align:center;
+	    background:rgba(99,102,241,.08); color:#c7d2fe;
+	  }
+	  .vm-status.ok{background:rgba(34,197,94,.10); color:#4ade80}
+	  .vm-status.err{background:rgba(255,43,69,.10); color:#ff5e7a}
+	  .vm-voice-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px}
+	  .vm-vopt{
+	    display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+	    padding:12px 14px; border-radius:11px;
+	    border:1px solid rgba(255,255,255,.08);
+	    background:rgba(255,255,255,.02);
+	    color:var(--text); cursor:pointer; font:inherit; text-align:left;
+	    transition:border-color .16s, background .16s;
+	  }
+	  .vm-vopt:hover{border-color:rgba(99,102,241,.5)}
+	  .vm-vopt .vn{font-size:14px; font-weight:500}
+	  .vm-vopt .vd{font-size:11px; color:var(--faint)}
+	  .vm-vopt.selected{
+	    border-color:var(--violet);
+	    background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(67,56,202,.08));
+	    box-shadow:0 0 16px rgba(99,102,241,.18);
+	  }
+	  .vm-sliders{margin-top:16px; display:flex; flex-direction:column; gap:14px}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="kicker">Studio</div>
+    <nav class="nav">
+      <a data-page="user" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>User</a>
+      <a data-page="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="4"/><path d="M4 20a8 8 0 0116 0"/></svg>Avatar</a>
+      <a data-page="liveroom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 20V9"/></svg>Live room</a>
+    </nav>
+    <div class="foot"><div class="av"></div><div><div class="t1">Zoey</div><div class="t2">Admin</div></div></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===== USER ===== -->
+    <section class="page active" id="page-user">
+      <div class="head">
+        <div><h1>User</h1><p>Your capture devices — only you see these, never your viewers.</p></div>
+        <div class="actions"><div class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Save</div></div>
+      </div>
+      <div class="content">
+        <div class="col forms">
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg></div><h3>Camera</h3><div class="sw"><div class="switch on"><div class="kn"></div></div></div></div>
+            <div class="grid2">
+              <div><span class="field-label">Device</span><div class="input sel">FaceTime HD Camera<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div><span class="field-label">Resolution</span><div class="input sel">1080p · 30 fps<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4M8 22h8"/></svg></div><h3>Microphone</h3><div class="sw"><div class="switch on"><div class="kn"></div></div></div></div>
+            <div><span class="field-label">Device</span><div class="input sel">Shure MV7<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            <div class="set-row" style="margin-top:20px"><div class="tx"><div class="a">Input level</div></div><div class="meter"><div class="f"></div></div></div>
+            <div class="set-row"><div class="tx"><div class="a">Noise suppression</div><div class="b">Reduce keyboard and fan noise</div></div><div class="switch on"><div class="kn"></div></div></div>
+          </div>
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 9v6M8 5v14M13 2v20M18 6v12M21 9v6"/></svg></div><h3>Voice mode</h3></div>
+            <div class="tiles" id="voiceTiles">
+              <div class="tile on" data-mode="original"><div class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4M8 22h8"/></svg></div><div class="nm">Original</div></div>
+              <div class="tile" data-mode="changer"><div class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c0-3.3 3.5-6 9-6s9 2.7 9 6-3.5 6-9 6-9-2.7-9-6z"/><circle cx="9" cy="11.5" r="1.3" fill="currentColor"/><circle cx="15" cy="11.5" r="1.3" fill="currentColor"/></svg></div><div class="nm">Voice changer</div></div>
+              <div class="tile" data-mode="aivoice"><div class="tic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.4L18 9l-4.1 1.6L12 15l-1.9-4.4L6 9l4.1-1.6z"/><path d="M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z"/></svg></div><div class="nm">AI voice</div></div>
+            </div>
+
+            <!-- Voice Changer 面板 -->
+            <div class="vmode-panel" id="panelChanger" style="display:none; margin-top:18px">
+              <div class="vm-upload" id="vmUpload">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Drop MP3 or click to upload</span>
+                <small>Supports .mp3, .wav up to 10MB</small>
+                <input type="file" id="vmMp3" accept="audio/mpeg,audio/wav" hidden>
+              </div>
+              <div class="vm-file" id="vmFile" style="display:none">
+                <span id="vmFileName"></span>
+                <button id="vmFileRemove">&times;</button>
+              </div>
+              <button class="vm-extract" id="vmExtract" disabled>Extract Voice</button>
+              <div class="vm-status" id="vmStatus" style="display:none"></div>
+            </div>
+
+            <!-- AI Voice 面板 -->
+            <div class="vmode-panel" id="panelAIVoice" style="display:none; margin-top:18px">
+              <div class="vm-voice-grid" id="vmVoiceGrid">
+                <button class="vm-vopt selected" data-v="original"><span class="vn">Original</span><span class="vd">No effect</span></button>
+                <button class="vm-vopt" data-v="anime"><span class="vn">Anime Girl</span><span class="vd">Anime style</span></button>
+                <button class="vm-vopt" data-v="loli"><span class="vn">Loli</span><span class="vd">Soft high pitch</span></button>
+                <button class="vm-vopt" data-v="mature"><span class="vn">Mature</span><span class="vd">Deep mature</span></button>
+                <button class="vm-vopt" data-v="male"><span class="vn">Male</span><span class="vd">Youthful male</span></button>
+                <button class="vm-vopt" data-v="custom"><span class="vn">Custom</span><span class="vd">Custom voice</span></button>
+              </div>
+              <div class="vm-sliders">
+                <div class="slider"><div class="lb">Pitch <b id="vmPitchVal">0</b></div><div class="track"><div class="fill" id="vmPitchFill" style="width:50%"></div><div class="knob" id="vmPitchKnob" style="left:50%"></div></div></div>
+                <div class="slider"><div class="lb">Intensity <b id="vmIntVal">60%</b></div><div class="track"><div class="fill" id="vmIntFill" style="width:60%"></div><div class="knob" id="vmIntKnob" style="left:60%"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col side">
+          <div class="card" style="padding:20px 22px">
+            <div class="ph2"><span class="t">Your monitor</span><span class="r" style="color:var(--dim)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Private</span></div>
+            <div class="mon-sm"><img src="assets/camera@3x.jpg" alt=""><div class="badge"><i></i>Camera on</div></div>
+          </div>
+
+          <div class="card" style="padding:20px 22px">
+            <div class="ph2"><span class="t">Live chat</span><span class="r"><i></i>Live</span></div>
+            <div class="chatlist">
+              <div class="crow"><span class="av" style="background:linear-gradient(135deg,#6366f1,#4338ca)"></span><span class="nm">Yeme</span><span class="msg">神回！！</span></div>
+              <div class="crow"><span class="av" style="background:linear-gradient(135deg,#ff9ac0,#6366f1)"></span><span class="nm">Riku</span><span class="msg">応援してる🔥</span></div>
+              <div class="crow"><span class="av" style="background:linear-gradient(135deg,#7be0ff,#6366f1)"></span><span class="nm">Ken</span><span class="msg">888888</span></div>
+              <div class="crow"><span class="av" style="background:linear-gradient(135deg,#6366f1,#57e0a8)"></span><span class="nm">Mio</span><span class="msg">かわいいー！！</span></div>
+              <div class="crow"><span class="av" style="background:linear-gradient(135deg,#f5c451,#ff9ac0)"></span><span class="nm">Aki</span><span class="msg">声すき♡</span></div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:20px 22px">
+            <div class="ph2"><span class="t">Gift rank</span><span class="r" style="color:var(--faint)">Today</span></div>
+            <div class="rank">
+              <div class="rrow"><span class="no" style="color:#f5c451">1</span><span class="av" style="background:linear-gradient(135deg,#ff9ac0,#6366f1)"></span><span class="nm">星野 Hoshino</span><span class="amt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/></svg>12,400</span></div>
+              <div class="rrow"><span class="no" style="color:#cbd0dd">2</span><span class="av" style="background:linear-gradient(135deg,#7be0ff,#6366f1)"></span><span class="nm">Kenta</span><span class="amt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/></svg>9,850</span></div>
+              <div class="rrow"><span class="no" style="color:#d89a6a">3</span><span class="av" style="background:linear-gradient(135deg,#6366f1,#57e0a8)"></span><span class="nm">みお Mio</span><span class="amt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/></svg>7,200</span></div>
+              <div class="rrow"><span class="no">4</span><span class="av" style="background:linear-gradient(135deg,#4338ca,#ff9ac0)"></span><span class="nm">Riku</span><span class="amt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/></svg>5,100</span></div>
+              <div class="rrow"><span class="no">5</span><span class="av" style="background:linear-gradient(135deg,#f5c451,#ff9ac0)"></span><span class="nm">Aki</span><span class="amt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/></svg>3,600</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== AVATAR ===== -->
+    <section class="page" id="page-avatar">
+      <div class="head">
+        <div><h1>Avatar</h1><p>Set up the persona and voice your viewers see and hear.</p></div>
+        <div class="actions"><div class="btn ghost">Save draft</div><div class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Publish</div></div>
+      </div>
+      <div class="content">
+        <div class="col forms">
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div><h3>Appearance</h3><small>PNG / JPG · 1024×1536 recommended</small></div>
+            <div class="av-row">
+              <div class="av-thumb"><img src="assets/vtuber@3x.jpg" alt=""><div class="edit"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Replace</div></div>
+              <div class="av-fields">
+                <div><span class="field-label">Display name</span><div class="input">Yumene</div></div>
+                <div><span class="field-label">Style tags</span><div class="chips"><span class="chip on">Anime</span><span class="chip">Mature</span><span class="chip">Loli</span><span class="chip">Shonen</span><span class="chip">+ Custom</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v4M8 22h8"/></svg></div><h3>Voice</h3><small>Pick a voice from your provider library</small></div>
+            <div class="grid2">
+              <div><span class="field-label">Voice provider</span><div class="input sel">Fish Audio<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div><span class="field-label">Voice ID</span><div class="input sel">spk_9f2a7c41-be08<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div></div>
+            </div>
+            <div style="margin-top:22px">
+              <span class="field-label">Preview</span>
+              <div class="voice-preview">
+                <div class="play"><svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+                <div class="wave" id="wave"></div>
+                <span class="lbl">0:06</span>
+              </div>
+            </div>
+            <div class="slider" style="margin-top:26px;max-width:calc(50% - 10px)"><div class="lb">Volume <b>80%</b></div><div class="track"><div class="fill" style="width:80%"></div><div class="knob" style="left:80%"></div></div></div>
+          </div>
+        </div>
+        <div class="col side">
+          <div class="prev-card">
+            <div class="prev-head"><span class="t">Preview</span><span class="tag"><i></i>Viewer view</span></div>
+            <div class="phone"><div class="screen">
+              <img class="vt" src="assets/vtuber@3x.jpg" alt=""><div class="grad"></div><div class="notch"></div>
+              <div class="ptop"><span class="lbadge">LIVE</span><span class="dur">36:12</span><span class="vw"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>12.5K</span></div>
+              <div class="prail"><div class="b heart"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-4.5-8-10a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 11c0 5.5-8 10-8 10z"/></svg></div><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-9 8.4L3 21l1.1-5.5A8.4 8.4 0 1121 11.5z"/></svg></div><div class="b gift"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12"/></svg></div></div>
+              <div class="psay">Add comment…</div>
+            </div></div>
+            <div class="prev-note">Viewers see the avatar and the selected voice.<br>Your real camera and original audio never go out.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LIVE ROOM ===== -->
+    <section class="page" id="page-liveroom">
+      <div class="head">
+        <div><h1>Live room</h1><p>The stage your viewers see — background, room details, and overlays.</p></div>
+        <div class="actions"><div class="btn ghost">Save draft</div><div class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Publish</div></div>
+      </div>
+      <div class="content">
+        <div class="col forms">
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></div><h3>Background</h3><small>Pick a scene or upload your own</small></div>
+            <div class="scenes">
+              <div class="scene on" style="background:linear-gradient(160deg,#3a2a6e,#1b1338 60%,#2a1550)"><div class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div class="nm">Night city</div></div>
+              <div class="scene" style="background:linear-gradient(160deg,#6e4a3a,#3a2318)"><div class="nm">Warm room</div></div>
+              <div class="scene" style="background:linear-gradient(160deg,#2a3a6e,#151d38)"><div class="nm">Studio blue</div></div>
+              <div class="scene" style="background:linear-gradient(160deg,#2c2c3c,#0e0e18)"><div class="nm">Dark stage</div></div>
+              <div class="scene up"><div class="u"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div><span>Upload</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div><h3>Room details</h3></div>
+            <div><span class="field-label">Room title</span><div class="input">Yumene's cozy night stream</div></div>
+            <div class="grid2" style="margin-top:20px">
+              <div><span class="field-label">Platform · room ID</span><div class="input sel">TikTok Live · #12500<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></div></div>
+              <div><span class="field-label">Run mode</span><div class="seg"><span class="on">Realtime</span><span>High quality</span></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ct"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M14 3v18M14 8h7M14 14h7"/></svg></div><h3>Overlays</h3><small>What viewers see on screen</small></div>
+            <div class="toggles">
+              <div class="set-row" style="border-top:none"><div class="tx"><div class="a">Live chat</div></div><div class="switch on"><div class="kn"></div></div></div>
+              <div class="set-row" style="border-top:none"><div class="tx"><div class="a">Gifts</div></div><div class="switch on"><div class="kn"></div></div></div>
+              <div class="set-row"><div class="tx"><div class="a">Floating hearts</div></div><div class="switch on"><div class="kn"></div></div></div>
+              <div class="set-row"><div class="tx"><div class="a">Viewer count</div></div><div class="switch on"><div class="kn"></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="col side">
+          <div class="prev-card">
+            <div class="prev-head"><span class="t">Preview</span><span class="tag"><i></i>Viewer view</span></div>
+            <div class="phone"><div class="screen">
+              <img class="vt" src="assets/vtuber@3x.jpg" alt=""><div class="grad"></div><div class="notch"></div>
+              <div class="ptop"><span class="lbadge">LIVE</span><span class="dur">36:12</span><span class="vw"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>12.5K</span></div>
+              <div class="prail"><div class="b heart"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-4.5-8-10a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 11c0 5.5-8 10-8 10z"/></svg></div><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-9 8.4L3 21l1.1-5.5A8.4 8.4 0 1121 11.5z"/></svg></div><div class="b gift"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12"/></svg></div></div>
+              <div class="pchat"><div class="pmsg"><span class="a"></span><span class="w">Yeme</span>&nbsp;神回！！</div><div class="pmsg"><span class="a"></span><span class="w">Mio</span>&nbsp;かわいいー！！</div></div>
+              <div class="psay">Add comment…</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // waveform bars for avatar preview
+  (function(){
+    var w=document.getElementById('wave'); if(!w) return;
+    var h=[30,55,80,45,95,60,35,72,50,88,40,65,30,78,52,90,44,68,34,60,82,48,70,38,58,86,42,64,30,75,48,66];
+    w.innerHTML=h.map(function(v){return '<span style="height:'+v+'%"></span>'}).join('');
+  })();
+
+  // page switching
+  var links=document.querySelectorAll('.nav a');
+  links.forEach(function(a){
+    a.addEventListener('click',function(){
+      links.forEach(function(x){x.classList.remove('on')});
+      a.classList.add('on');
+      document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+      document.getElementById('page-'+a.dataset.page).classList.add('active');
+    });
+  });
+
+  // simple interactions
+  document.querySelectorAll('.switch').forEach(function(s){s.addEventListener('click',function(){s.classList.toggle('on')})});
+  document.querySelectorAll('.tiles').forEach(function(g){g.querySelectorAll('.tile').forEach(function(t){t.addEventListener('click',function(){g.querySelectorAll('.tile').forEach(function(x){x.classList.remove('on')});t.classList.add('on')})})});
+  document.querySelectorAll('.seg').forEach(function(g){g.querySelectorAll('span').forEach(function(t){t.addEventListener('click',function(){g.querySelectorAll('span').forEach(function(x){x.classList.remove('on')});t.classList.add('on')})})});
+  document.querySelectorAll('.scenes').forEach(function(g){g.querySelectorAll('.scene:not(.up)').forEach(function(t){t.addEventListener('click',function(){g.querySelectorAll('.scene').forEach(function(x){x.classList.remove('on');var c=x.querySelector('.chk');if(c)c.remove()});t.classList.add('on');if(!t.querySelector('.chk')){var d=document.createElement('div');d.className='chk';d.innerHTML='<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6L9 17l-5-5\"/></svg>';t.appendChild(d)}})})});
+  document.querySelectorAll('.chips').forEach(function(g){g.querySelectorAll('.chip').forEach(function(t){t.addEventListener('click',function(){t.classList.toggle('on')})})});
+</script>
+
+<script>
+/* ---- Voice Mode Tiles ---- */
+(function(){
+  var tiles = document.getElementById('voiceTiles');
+  if (!tiles) return;
+  
+  tiles.addEventListener('click', function(e){
+    var tile = e.target.closest('.tile');
+    if (!tile) return;
+    var mode = tile.dataset.mode;
+    
+    // Update active tile
+    tiles.querySelectorAll('.tile').forEach(function(t){ t.classList.remove('on'); });
+    tile.classList.add('on');
+    
+    // Show/hide panels
+    var pc = document.getElementById('panelChanger');
+    var pa = document.getElementById('panelAIVoice');
+    if (pc) pc.style.display = mode === 'changer' ? 'block' : 'none';
+    if (pa) pa.style.display = mode === 'aivoice' ? 'block' : 'none';
+  });
+
+  /* ---- File Upload ---- */
+  var upload = document.getElementById('vmUpload');
+  var mp3 = document.getElementById('vmMp3');
+  var fileRow = document.getElementById('vmFile');
+  var fileName = document.getElementById('vmFileName');
+  var fileRemove = document.getElementById('vmFileRemove');
+  var extractBtn = document.getElementById('vmExtract');
+  var status = document.getElementById('vmStatus');
+
+  if (upload && mp3) {
+    upload.addEventListener('click', function(){ mp3.click(); });
+    upload.addEventListener('dragover', function(e){ e.preventDefault(); upload.classList.add('drag'); });
+    upload.addEventListener('dragleave', function(){ upload.classList.remove('drag'); });
+    upload.addEventListener('drop', function(e){
+      e.preventDefault(); upload.classList.remove('drag');
+      if (e.dataTransfer.files.length) handleVmFile(e.dataTransfer.files[0]);
+    });
+    mp3.addEventListener('change', function(){ if (mp3.files.length) handleVmFile(mp3.files[0]); });
+  }
+
+  function handleVmFile(file){
+    if (!file.type.match(/audio\/(mpeg|wav|mp4|ogg)/)) {
+      if (status) { status.style.display='block'; status.className='vm-status err'; status.textContent='Unsupported file type'; }
+      return;
+    }
+    upload.style.display = 'none';
+    fileRow.style.display = 'flex';
+    fileName.textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+    extractBtn.disabled = false;
+    if (status) status.style.display = 'none';
+  }
+
+  if (fileRemove) {
+    fileRemove.addEventListener('click', function(){
+      upload.style.display = 'flex'; fileRow.style.display = 'none';
+      mp3.value = ''; extractBtn.disabled = true;
+      if (status) status.style.display = 'none';
+    });
+  }
+
+  if (extractBtn) {
+    extractBtn.addEventListener('click', function(){
+      status.style.display = 'block'; status.className = 'vm-status';
+      status.textContent = 'Extracting voice...'; extractBtn.disabled = true;
+      setTimeout(function(){
+        status.className = 'vm-status ok';
+        status.textContent = 'Voice extracted successfully!';
+        extractBtn.disabled = false;
+      }, 2000);
+    });
+  }
+
+  /* ---- AI Voice Grid ---- */
+  var vgrid = document.getElementById('vmVoiceGrid');
+  if (vgrid) {
+    vgrid.addEventListener('click', function(e){
+      var opt = e.target.closest('.vm-vopt');
+      if (!opt) return;
+      vgrid.querySelectorAll('.vm-vopt').forEach(function(o){ o.classList.remove('selected'); });
+      opt.classList.add('selected');
+    });
+  }
+})();
+</script>
+</body>
+</html>

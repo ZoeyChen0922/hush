@@ -1,27 +1,12 @@
 #!/bin/bash
-
-# Hush 后端服务器启动脚本
-# 使用方法：./start_server.sh
-
-cd "$(dirname "$0")" || exit
-
-echo "🚀 Hush 后端服务启动中..."
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  应用访问地址："
-echo "  👉 http://localhost:8000/hush_app.html"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "按 Ctrl+C 停止服务器"
-echo ""
-
-# 加载 .env 文件
-if [ -f .env ]; then
-    export $(cat .env | xargs)
-    echo "✓ 已加载 .env 配置"
-else
-    echo "⚠️  找不到 .env 文件"
-fi
-
-# 启动服务
-python3 hush_backend.py
+set -e
+cd "$(dirname "$0")"
+# hush_backend.py loads .env itself; never expand its contents in the shell.
+for hush_python in "$PWD/.venv/bin/python" "$PWD/../Hush图/.venv/bin/python" "$(command -v python3)"; do
+  if [ -x "$hush_python" ] && "$hush_python" -c 'import fastapi, uvicorn, requests' 2>/dev/null; then
+    echo 'Hush: http://127.0.0.1:8000/hush_app.html?v=journey-2'
+    exec "$hush_python" hush_backend.py
+  fi
+done
+echo 'No Hush Python environment found. Install fastapi, uvicorn and requests in a project .venv.' >&2
+exit 1

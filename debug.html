@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hush Debug</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .ok { color: #0f0; } .fail { color: #f00; }
+    </style>
+</head>
+<body>
+    <h2>Hush 3D 诊断工具</h2>
+    
+    <p id="three-check">检查 Three.js...</p>
+    <p id="night3d-check">检查 night3d canvas...</p>
+    <p id="interior3d-check">检查 interior3d canvas...</p>
+    <p id="files-check">检查脚本文件...</p>
+    
+    <script>
+        // 检查 Three.js
+        fetch('./three.module.min.js')
+            .then(r => {
+                if(r.ok) document.getElementById('three-check').innerHTML = '<span class="ok">✓</span> Three.js 文件存在';
+                else document.getElementById('three-check').innerHTML = '<span class="fail">✗</span> Three.js 文件加载失败: ' + r.status;
+            })
+            .catch(e => document.getElementById('three-check').innerHTML = '<span class="fail">✗</span> ' + e.message);
+        
+        // 检查 hush_night_3d.js
+        fetch('./hush_night_3d.js')
+            .then(r => {
+                if(r.ok) document.getElementById('night3d-check').innerHTML = '<span class="ok">✓</span> hush_night_3d.js 存在';
+                else document.getElementById('night3d-check').innerHTML = '<span class="fail">✗</span> hush_night_3d.js 加载失败';
+            });
+        
+        // 检查 hush_interior_3d.js
+        fetch('./hush_interior_3d.js')
+            .then(r => {
+                if(r.ok) document.getElementById('interior3d-check').innerHTML = '<span class="ok">✓</span> hush_interior_3d.js 存在';
+                else document.getElementById('interior3d-check').innerHTML = '<span class="fail">✗</span> hush_interior_3d.js 加载失败';
+            });
+        
+        // 检查 hush_app.html 是否有 interior3d canvas
+        fetch('./hush_app.html')
+            .then(r => r.text())
+            .then(t => {
+                if(t.includes('interior3d')) 
+                    document.getElementById('files-check').innerHTML = '<span class="ok">✓</span> HTML 中有 interior3d canvas';
+                else
+                    document.getElementById('files-check').innerHTML = '<span class="fail">✗</span> HTML 中找不到 interior3d canvas';
+            });
+    </script>
+</body>
+</html>

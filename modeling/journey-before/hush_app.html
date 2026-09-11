@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hush · Midnight Inn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --amber:#f4c88a;--amber2:#e0a86a;--ink:#f3efe6;--muted:#c9c2b4;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+  html,body{height:100%}
+  body{font-family:var(--sans);background:#000;color:var(--ink);overflow:hidden}
+  .app{position:relative;max-width:440px;height:100dvh;margin:0 auto;overflow:hidden;background:#0a0a12}
+
+  .scr{position:absolute;inset:0;display:none;flex-direction:column;background-size:cover;background-position:center;animation:fade .55s ease}
+  .scr.on{display:flex}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,6,14,.62) 0%,rgba(6,6,14,.06) 28%,rgba(6,6,14,.4) 58%,rgba(6,6,14,.94) 100%)}
+  .content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;overflow-y:auto;
+    padding:calc(28px + env(safe-area-inset-top)) 24px calc(30px + env(safe-area-inset-bottom))}
+  .spacer{flex:1;min-height:14px}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;gap:11px}
+  .brand{font-family:var(--serif);font-size:16px;font-weight:700;letter-spacing:1.5px}
+  .badge{font-size:10px;padding:4px 9px;border-radius:10px;background:rgba(244,200,138,.18);color:var(--amber);
+    margin-left:auto;display:flex;align-items:center;gap:5px;letter-spacing:.8px;font-weight:600}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);animation:blink 2.2s infinite}
+  @keyframes blink{50%{opacity:.3}}
+  .back{width:38px;height:38px;border-radius:50%;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.16);color:#fff;font-size:18px;backdrop-filter:blur(4px)}
+
+  /* host */
+  .fox{width:44px;height:44px;border-radius:50%;background-size:cover;background-position:center 22%;
+    border:1.5px solid rgba(244,200,138,.65);box-shadow:0 4px 16px rgba(0,0,0,.5);flex-shrink:0;cursor:pointer;animation:bob 3.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-4px) rotate(1deg)}}
+  .bubble{position:relative;z-index:3;align-self:flex-start;max-width:82%;margin-top:13px;
+    background:rgba(20,16,26,.68);border:1px solid rgba(255,255,255,.16);border-radius:16px;border-bottom-left-radius:4px;
+    padding:12px 15px;font-size:13.5px;line-height:1.6;backdrop-filter:blur(8px);min-height:1.2em}
+
+  /* typography */
+  .title{font-family:var(--serif);font-size:26px;line-height:1.14;text-shadow:0 2px 16px rgba(0,0,0,.75)}
+  .sub{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;text-shadow:0 2px 12px rgba(0,0,0,.85)}
+  .eyebrow{font-size:9.5px;font-weight:700;letter-spacing:2.4px;color:#ffe0b6;text-transform:uppercase}
+  .hly{text-align:center}
+
+  .btn{width:100%;padding:15px;border-radius:15px;border:none;font-family:var(--sans);font-size:15px;font-weight:700;margin-top:16px;
+    background:linear-gradient(135deg,var(--amber),var(--amber2));color:#3a2410;box-shadow:0 8px 24px rgba(0,0,0,.4);transition:transform .12s,filter .12s}
+  .btn:active{transform:scale(.97);filter:brightness(1.08)}
+  .btn.ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(6px)}
+  .btn.sm{padding:11px;font-size:13px;margin-top:10px}
+  .row2{display:flex;gap:9px}.row2 .btn{margin-top:0}
+
+  /* choice cards */
+  .rooms{display:flex;flex-direction:column;gap:9px}
+  .roomcard{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:15px;background:rgba(20,16,26,.58);
+    border:1px solid rgba(255,255,255,.13);backdrop-filter:blur(8px);transition:transform .14s,border-color .14s;cursor:pointer;text-align:left}
+  .roomcard:active{transform:scale(.975);border-color:rgba(244,200,138,.6)}
+  .roomcard .ic{font-size:21px;width:28px;text-align:center;flex-shrink:0}
+  .roomcard .tt{font-size:14.5px;font-weight:650}
+  .roomcard .ss{font-size:11px;color:var(--muted);margin-top:2px}
+  .roomcard .say{font-size:10px;color:var(--amber);white-space:nowrap;font-style:italic}
+  .hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:13px;cursor:pointer}
+  .hint b{color:var(--amber)}
+
+  /* voice */
+  .mic{width:70px;height:70px;border-radius:50%;margin:0 auto;border:none;font-size:27px;
+    background:linear-gradient(135deg,var(--amber),var(--amber2));color:#3a2410;box-shadow:0 8px 24px rgba(0,0,0,.45);animation:pulse 2.6s infinite}
+  .mic.rec{background:linear-gradient(135deg,#e08a8a,#c25f5f);color:#fff;animation:recpulse 1.1s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(0,0,0,.45),0 0 0 0 rgba(244,200,138,.45)}50%{box-shadow:0 8px 24px rgba(0,0,0,.45),0 0 0 15px rgba(244,200,138,0)}}
+  @keyframes recpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+  .vstatus{min-height:16px;text-align:center;font-size:11px;color:var(--amber);margin-top:10px}
+  .ta{width:100%;min-height:96px;margin-top:12px;padding:13px 14px;border-radius:14px;background:rgba(255,247,232,.93);
+    border:1px solid rgba(255,255,255,.2);color:#4b3a34;font:14px/1.65 var(--serif);resize:none;user-select:text}
+  .ta::placeholder{color:#a08d84}
+
+  /* rain fx */
+  .rainfx{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .9s;
+    background-image:repeating-linear-gradient(101deg,transparent 0 7px,rgba(174,206,240,.15) 7px 8px);
+    background-size:200px 200px;animation:raindown .5s linear infinite}
+  .rainfx.on{opacity:1}
+  @keyframes raindown{from{background-position:0 0}to{background-position:-40px 200px}}
+
+  /* tarot */
+  .cardwrap{width:126px;height:196px;margin:0 auto;perspective:900px}
+  .card3d{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1s}
+  .card3d.flip{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:15px;backface-visibility:hidden;display:grid;place-items:center;
+    box-shadow:0 12px 30px rgba(0,0,0,.55);border:1.5px solid var(--amber)}
+  .face.front{background:linear-gradient(160deg,#3a2f5c,#1c1636);font-size:32px;color:var(--amber)}
+  .face.back{background:linear-gradient(160deg,#2a2450,#171233);transform:rotateY(180deg);font-size:42px;color:#e6c4ff}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+  .chip{padding:9px 14px;border-radius:20px;background:rgba(20,16,26,.6);border:1px solid rgba(255,255,255,.16);
+    font-size:12.5px;cursor:pointer;backdrop-filter:blur(6px);transition:.14s}
+  .chip.on{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#3a2410;border-color:transparent;font-weight:700}
+
+  /* ===== DAY: interactive map ===== */
+  .mapwrap{position:relative;flex:1;min-height:340px;margin-top:12px;border-radius:24px;overflow:hidden;
+    border:1px solid rgba(255,230,200,.28);box-shadow:0 20px 44px rgba(20,10,18,.4);touch-action:none;cursor:grab;
+    perspective:1400px}
+  #town3d{position:absolute;inset:0;width:100%;height:100%;z-index:5;touch-action:none;cursor:grab;opacity:0;
+    transition:opacity .45s ease;background:linear-gradient(180deg,#b8e6ef 0%,#d9edd9 60%,#89b368 100%)}
+  #town3d:active{cursor:grabbing}.mapwrap.three-ready #town3d{opacity:1}.mapwrap.three-ready .mapworld{visibility:hidden}
+  .mapwrap.drag{cursor:grabbing}
+  /* the town and the real world are two sides of the same place */
+  .flipper{position:absolute;inset:0;transform-style:preserve-3d;
+    transition:transform 1.05s cubic-bezier(.55,.05,.25,1)}
+  .mapwrap.showreal .flipper{transform:rotateX(180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;overflow:hidden;border-radius:24px}
+  .face-real{transform:rotateX(180deg)}
+  .mapworld{position:absolute;left:0;top:0;width:170%;aspect-ratio:1000/1300;transform-origin:0 0;will-change:transform}
+  .mapworld .bg{position:absolute;inset:0;background:#1a2245}
+  .mapworld .mscrim{display:none}
+  .isodio{position:absolute;inset:0;z-index:2}
+  @keyframes isopop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .isoplace{cursor:pointer}
+  .isoplace .bob{animation:bob2 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  .isoplace .glow{opacity:0;transition:opacity .25s}
+  .isoplace:hover .glow{opacity:.45}
+  .isoplace.sel .glow{opacity:.85}
+  .isoplace .lbl{font-family:'Inter',sans-serif;font-weight:700;fill:#ffe6c0}
+  .isoplace.locked{opacity:.62}
+  .isoplace.locked .lbl{fill:#a9b2c8}
+  .mapfog{position:absolute;inset:0;z-index:4;pointer-events:none;
+    background:radial-gradient(125% 92% at 50% 50%,transparent 58%,rgba(9,13,32,.85) 100%)}
+  .place{position:absolute;z-index:3;border:0;background:none;color:#fff;text-align:center;cursor:pointer;
+    transform:translate(-50%,-50%);filter:drop-shadow(0 10px 12px rgba(26,12,20,.5));
+    opacity:0;animation:pop .5s cubic-bezier(.2,1.2,.4,1) forwards}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,-30%) scale(.6)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .place .bldg{position:relative;width:46px;height:46px;margin:0 auto;border-radius:50%;display:grid;place-items:center;font-size:20px;
+    background:rgba(48,28,40,.72);border:1.5px solid rgba(255,220,175,.8);backdrop-filter:blur(6px);
+    box-shadow:0 0 0 6px rgba(255,199,127,.1);transition:transform .18s,box-shadow .18s}
+  .place:active .bldg{transform:scale(.9)}
+  .place.sel .bldg{box-shadow:0 0 0 8px rgba(255,199,127,.22),0 0 22px rgba(255,199,127,.5);transform:scale(1.08)}
+  .place.locked{filter:grayscale(.8) brightness(.7)}
+  .place.locked .bldg{border-style:dashed;border-color:rgba(255,255,255,.4)}
+  .place .pname{display:block;margin-top:6px;padding:3px 9px;border-radius:9px;background:rgba(24,16,26,.72);
+    font-size:10px;font-weight:600;letter-spacing:.4px;white-space:nowrap;backdrop-filter:blur(6px)}
+  .place .pbadge{position:absolute;top:-5px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:#e07a7a;
+    color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 5px;border:1.5px solid rgba(20,10,18,.6)}
+  .mappath{position:absolute;inset:0;z-index:2;pointer-events:none}
+  /* map mode switch */
+  .modeswitch{display:flex;gap:8px;margin-top:10px}
+  .mchip{flex:1;padding:9px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(20,16,26,.55);
+    color:var(--muted);font:600 12px var(--sans);backdrop-filter:blur(6px)}
+  .mchip.on{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#3a2410;border-color:transparent}
+  /* real-world (upside down) layer */
+  #gmapbox{position:absolute;inset:0;z-index:1;background:#e8ecf2}
+  #gmap{position:absolute;inset:0;filter:saturate(.82) brightness(1.03) contrast(.96) sepia(.1)}
+  #gmap .maplibregl-canvas{outline:none}
+  #gmap gmp-map-3d,#gmap>div{width:100%;height:100%}
+  .udfx{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(125% 92% at 50% 46%,transparent 58%,rgba(60,50,70,.35) 100%)}
+  .udstatus{position:absolute;left:12px;top:12px;z-index:7;font-size:10.5px;color:#3d3550;
+    background:rgba(255,252,246,.86);padding:6px 11px;border-radius:10px;backdrop-filter:blur(6px);max-width:80%;
+    box-shadow:0 4px 14px rgba(40,30,50,.18)}
+  .flipbtn{position:absolute;right:12px;top:12px;z-index:7;width:34px;height:34px;border-radius:11px;
+    border:1px solid rgba(60,50,70,.2);background:rgba(255,252,246,.88);color:#4a3f58;font-size:15px;backdrop-filter:blur(6px)}
+  .nearby{position:absolute;left:0;right:0;bottom:0;z-index:7;padding:10px 12px 12px;display:flex;gap:8px;
+    overflow-x:auto;scrollbar-width:none;background:linear-gradient(180deg,transparent,rgba(250,246,240,.92))}
+  .nearby::-webkit-scrollbar{display:none}
+  .nb{flex:0 0 auto;max-width:150px;padding:9px 12px;border-radius:13px;background:rgba(255,253,249,.95);
+    border:1px solid rgba(120,100,80,.2);backdrop-filter:blur(8px);cursor:pointer;color:#4a3f58;
+    box-shadow:0 4px 14px rgba(40,30,50,.12)}
+  .nb b{display:block;font-size:11.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nb span{display:block;font-size:9.5px;color:#8a7f6f;margin-top:2px;text-transform:capitalize}
+  .nb.host{border-color:var(--amber2);background:linear-gradient(180deg,#fff7e6,#ffeed3)}
+  .udfx{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 50%,rgba(30,40,90,.15) 40%,rgba(6,10,26,.9) 100%),
+      linear-gradient(180deg,rgba(80,60,120,.16),rgba(10,14,34,.4))}
+  .keypanel{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);z-index:8;display:none;
+    padding:18px;border-radius:18px;background:rgba(18,14,28,.94);border:1px solid rgba(255,225,190,.25);backdrop-filter:blur(12px)}
+  .keypanel.on{display:block}
+  .keypanel .kp-t{font-family:var(--serif);font-size:17px}
+  .keypanel .kp-s{font-size:11.5px;color:var(--muted);margin:6px 0 12px;line-height:1.55}
+  .keypanel input{width:100%;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.2);
+    background:rgba(255,255,255,.07);color:#fff;font:12px var(--sans);user-select:text}
+  .mapctl{position:absolute;right:10px;bottom:10px;z-index:6;display:flex;flex-direction:column;gap:6px}
+  .mapctl button{width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.2);
+    background:rgba(20,12,20,.6);color:#fff;font-size:15px;backdrop-filter:blur(6px)}
+  .maptip{position:absolute;left:12px;bottom:12px;z-index:6;font-size:9.5px;letter-spacing:.6px;color:rgba(255,255,255,.55)}
+  /* bottom sheet */
+  .sheet{position:absolute;left:10px;right:10px;bottom:10px;z-index:7;padding:14px 16px;border-radius:18px;
+    background:rgba(26,16,24,.9);border:1px solid rgba(255,225,190,.28);backdrop-filter:blur(14px);
+    transform:translateY(130%);transition:transform .32s cubic-bezier(.2,1,.3,1);box-shadow:0 14px 40px rgba(0,0,0,.5)}
+  .sheet.on{transform:none}
+  .sheet .sh-t{font-family:var(--serif);font-size:17px;display:flex;align-items:center;gap:8px}
+  .sheet .sh-s{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .sheet .sh-x{margin-left:auto;font-size:16px;color:var(--muted);cursor:pointer}
+
+  /* lists */
+  .panel{background:rgba(24,16,24,.66);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:14px 16px;backdrop-filter:blur(10px)}
+  .entry{padding:11px 0;border-bottom:1px dashed rgba(255,255,255,.13)}
+  .entry:last-child{border:none}
+  .entry .d{font-size:10px;color:var(--amber);letter-spacing:.6px;display:flex;gap:8px;align-items:center}
+  .entry .mood{padding:1px 7px;border-radius:8px;background:rgba(244,200,138,.16);font-size:9.5px}
+  .entry .tx{font-family:var(--serif);font-size:13.5px;line-height:1.6;margin-top:5px;color:#f0e6dc;user-select:text}
+  .empty{text-align:center;color:var(--muted);font-size:12.5px;padding:20px 0}
+  .letterpaper{padding:16px;border-radius:12px;background:rgba(255,244,224,.94);color:#51413a;
+    font:14px/1.75 var(--serif);user-select:text;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+  .lmeta{font-size:10px;color:#8d7b70;letter-spacing:.6px;margin-bottom:8px;font-family:var(--sans)}
+
+  /* host picker */
+  .pick{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+  .opt{width:76px;height:76px;border-radius:19px;background-size:cover;background-position:center;border:2px solid transparent;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .opt.sel{border-color:var(--amber);box-shadow:0 0 0 4px rgba(244,200,138,.25)}
+  .opt.up{display:grid;place-items:center;background:rgba(255,255,255,.06);border:2px dashed rgba(255,255,255,.3);font-size:24px;color:var(--muted)}
+  .bigfox{width:140px;height:140px;border-radius:50%;margin:0 auto;background-size:cover;background-position:center 22%;
+    border:2px solid rgba(244,200,138,.6);box-shadow:0 10px 30px rgba(0,0,0,.5);animation:bob 3.6s ease-in-out infinite}
+  .nameinput{width:100%;max-width:230px;margin:13px auto 0;display:block;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.22);border-radius:12px;color:#fff;padding:10px 14px;font-size:13.5px;text-align:center;font-family:var(--sans)}
+  input[type=file]{display:none}
+  /* shared day / night 3D world */
+  .nightscene{position:absolute;inset:0;overflow:hidden;background:#071128}
+  #night3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+  .nightveil{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(4,8,22,.18),rgba(4,6,16,.04) 48%,rgba(4,5,14,.94) 88%)}
+  .nightui{position:relative;z-index:4;flex:1;display:flex;flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom));pointer-events:none}
+  .nightui>*{pointer-events:auto}.scenehint{font-size:10px;color:rgba(255,255,255,.58);letter-spacing:.7px;margin-top:8px}
+  .hostdialog{margin-top:auto;padding:15px;border-radius:20px;background:rgba(13,12,24,.76);border:1px solid rgba(244,200,138,.28);backdrop-filter:blur(16px);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+  .dialoghead{display:flex;align-items:center;gap:10px}.dialoghead .fox{width:38px;height:38px}.dialogname{font-family:var(--serif);font-size:15px}.dialogstep{margin-left:auto;font-size:9px;color:var(--amber);letter-spacing:1.2px}
+  .hostprompt{font:15px/1.55 var(--serif);margin-top:11px;min-height:46px}.replychips{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+  .replychip{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;border-radius:18px;padding:9px 12px;font:600 11.5px var(--sans)}
+  .replychip:active{background:rgba(244,200,138,.25)}.voiceanswer{display:flex;gap:8px;margin-top:10px}.voiceanswer .btn{margin:0;padding:11px;font-size:12px}.voiceanswer .btn.ghost{flex:0 0 46px}
+  .recommendation{display:none;margin-top:12px;padding:12px;border-radius:14px;background:linear-gradient(135deg,rgba(244,200,138,.2),rgba(113,83,145,.2));border:1px solid rgba(244,200,138,.35)}
+  .recommendation.on{display:block}.rec-eyebrow{font-size:9px;color:var(--amber);letter-spacing:1.4px}.rec-title{font-family:var(--serif);font-size:18px;margin-top:3px}.rec-reason{font-size:11px;color:var(--muted);line-height:1.5;margin-top:3px}
+  .hotspotlabel{position:absolute;z-index:3;padding:7px 10px;border-radius:13px;background:rgba(10,9,20,.68);border:1px solid rgba(255,224,180,.25);font-size:10px;color:#ffe8c8;pointer-events:none;backdrop-filter:blur(7px)}
+  .hotspotlabel.tree{left:6%;top:36%}.hotspotlabel.inn{right:7%;top:30%}.assetnote{position:absolute;right:10px;bottom:8px;z-index:2;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.5px}
+  .scenezoom{position:absolute;right:12px;top:22%;z-index:6;display:flex;flex-direction:column;gap:7px}
+  .scenezoom button{width:36px;height:36px;border-radius:12px;border:1px solid rgba(255,255,255,.22);background:rgba(12,11,24,.62);color:#fff;font-size:18px;backdrop-filter:blur(8px);box-shadow:0 5px 16px rgba(0,0,0,.2)}
+  .arrivalui{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;padding:calc(24px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));pointer-events:none}.arrivalui>*{pointer-events:auto}.arrivalcta{margin-top:auto;text-align:center}.arrivalcta .btn{max-width:280px}
+  .openingmodal{position:absolute;inset:0;z-index:20;display:none;place-items:center;padding:24px;background:rgba(3,4,11,.62);backdrop-filter:blur(7px)}.openingmodal.on{display:grid}.openingcard{width:100%;padding:23px;border-radius:22px;text-align:center;background:rgba(19,15,25,.95);border:1px solid rgba(244,200,138,.38);box-shadow:0 24px 70px rgba(0,0,0,.62)}
+  #interior{background:#33271d url(assets/models/interior-preview.png) center/cover no-repeat}#interior .scrim,#interior .content{pointer-events:none}
+  #interior3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none;opacity:0;animation:fadeIn 2.3s ease-out forwards}@keyframes fadeIn{from{opacity:0;filter:brightness(.3)}to{opacity:1;filter:brightness(1)}}
+  .blackout{background:#020205}.blackout .nightui{background:radial-gradient(circle at 50% 20%,rgba(35,29,53,.25),transparent 45%)}
+  .dayroomscene{position:absolute;inset:0;background:#d9bd8f}.dayroomscene canvas{width:100%;height:100%;display:block;touch-action:none}.dayroomscene:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,244,216,.05),rgba(20,10,14,.06) 52%,rgba(10,6,10,.76))}.dayhotspots{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}.dayobject{padding:13px;border-radius:16px;text-align:left;color:#fff;background:rgba(22,14,18,.74);border:1px solid rgba(255,232,196,.28);backdrop-filter:blur(10px)}.dayobject b{display:block;font-family:var(--serif);font-size:15px}.dayobject span{font-size:10px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══════════ ARRIVAL · first see the house ═══════════ -->
+<section class="scr on" id="arrival">
+  <div class="nightscene"><canvas id="night3d" aria-label="The interactive Midnight Inn. Choose a host, then tap the front door to open the inn."></canvas><div class="nightveil"></div></div>
+  <div class="arrivalui"><div class="topbar"><div class="brand">HUSH · MIDNIGHT INN</div><div class="badge"><span class="dot"></span>AFTER DARK</div></div><div class="scenehint">drag to look around · pinch to zoom</div>
+    <div class="arrivalcta"><div class="eyebrow" id="arrival-eyebrow">YOUR NIGHT AWAITS</div><div class="title" id="arrival-title" style="margin-top:7px">Choose who keeps the inn tonight.</div><button class="btn" id="arrival-btn" onclick="arrivalAction()">Choose my Night Host</button></div>
+  </div>
+  <div class="openingmodal" id="openingmodal"><div class="openingcard"><div class="eyebrow">THE LAMPS ARE LIT</div><div class="title" style="font-size:24px;margin-top:8px">The Midnight Inn is now open.</div><div class="sub">Tonight's business has begun. Step inside, then you may close your eyes.</div><button class="btn" onclick="enterInterior()">Step inside</button></div></div>
+</section>
+
+<!-- ═══════════ SETUP · choose host ═══════════ -->
+<section class="scr" id="setup" style="background-image:url('2.jpg')">
+  <div class="scrim"></div>
+  <div class="content hly" style="justify-content:center">
+    <div class="eyebrow">Before we begin</div>
+    <div class="title" style="margin-top:8px">Choose your night host</div>
+    <div class="sub">They'll keep you company tonight.</div>
+    <div style="margin-top:20px"><div class="bigfox" id="bigfox"></div></div>
+    <input class="nameinput" id="innname" placeholder="Name your host (optional)" maxlength="20">
+    <div class="pick" id="picker"></div>
+    <input type="file" id="upfile" accept="image/*">
+    <button class="btn" style="max-width:270px;margin-left:auto;margin-right:auto" onclick="finishSetup()">Confirm my Night Host</button>
+  </div>
+</section>
+
+<!-- ═══════════ INTERIOR REVEAL ═══════════ -->
+<section class="scr" id="interior"><canvas id="interior3d" aria-label="3D view of the inn's interior room where you'll spend the night."></canvas><div class="scrim" style="background:linear-gradient(180deg,transparent 45%,rgba(8,4,8,.8))"></div><div class="content hly"><div class="spacer"></div><div class="eyebrow">INSIDE THE INN</div><div class="title" style="font-size:22px;margin-top:7px">The room is ready for you.</div><div class="sub">The screen will go dark. You can close your eyes.</div></div></section>
+
+<!-- ═══════════ NIGHT · black eyes-free host dialogue ═══════════ -->
+<section class="scr blackout" id="hub">
+  <div class="nightui">
+    <div class="topbar"><div class="brand">MIDNIGHT INN · <span id="clock">00:12</span></div><div class="badge"><span class="dot"></span>OPEN</div></div>
+    <div class="scenehint">eyes-free mode · you may close your eyes now</div>
+    <div class="hostdialog">
+      <div class="dialoghead"><div class="fox" onclick="hostTalk()"></div><div class="dialogname" id="dialogname">Your Night Host</div><div class="dialogstep" id="dialogstep">CHECKING IN</div></div>
+      <div class="hostprompt" id="hostprompt">The door is open. Come sit by the fire.</div>
+      <div class="replychips" id="replychips"></div>
+      <div class="voiceanswer"><button class="btn ghost" aria-label="Answer by voice" onclick="listenHostAnswer()">🎙</button><button class="btn" id="continueRec" onclick="acceptRecommendation()">Talk with my host</button></div>
+      <div class="vstatus" id="hubstatus" style="color:var(--amber);margin-top:10px;font-size:12px">Just talk — I'm listening</div>
+      <div class="recommendation" id="recommendation"><div class="rec-eyebrow">YOUR HOST SUGGESTS</div><div class="rec-title" id="rec-title"></div><div class="rec-reason" id="rec-reason"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ NEXT DAY · interior archive ═══════════ -->
+<section class="scr" id="dayroom"><div class="dayroomscene"><canvas id="dayroom3d" aria-label="Daylight 3D inn interior with an interactive diary and letter chest."></canvas></div><div class="content" style="z-index:3"><div class="topbar"><div class="brand">THE INN · DAYLIGHT</div><div class="badge" id="open-duration" style="color:#fff;background:rgba(40,24,20,.55)">OPEN 0H 00M</div></div><div class="spacer"></div><div class="dayhotspots"><button class="dayobject" onclick="go('book')"><b>📓 Night Diary</b><span>What your host kept last night</span></button><button class="dayobject" onclick="go('post')"><b>✉️ Letter Box</b><span>Sealed letters waiting inside</span></button></div><div class="hint" onclick="go('arrival')" style="color:#fff">Evening will return · <b>visit the exterior ›</b></div></div></section>
+
+<!-- ═══════════ DIARY ═══════════ -->
+<section class="scr" id="diary" style="background-image:url('6.jpg')">
+  <div class="scrim"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="go('hub')">‹</button><div class="fox" onclick="hostTalk()"></div><div class="brand" style="font-size:14px">DIARY</div></div>
+    <div class="bubble" id="b-diary"></div>
+    <div class="spacer"></div>
+    <div class="hly">
+      <button class="mic" id="mic-diary" onclick="toggleRec('diary')">🎙️</button>
+      <div class="vstatus" id="st-diary">Tap and speak · it stays with you</div>
+      <textarea class="ta" id="ta-diary" placeholder="Tonight…"></textarea>
+      <div class="row2" style="margin-top:10px">
+        <button class="btn" onclick="saveDiary()">Keep it in my diary</button>
+        <button class="btn ghost" style="flex:0 0 34%" onclick="go('hub')">Back</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ LETTER ═══════════ -->
+<section class="scr" id="letter" style="background-image:url('6.jpg')">
+  <div class="scrim"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="go('hub')">‹</button><div class="fox" onclick="hostTalk()"></div><div class="brand" style="font-size:14px">LETTER</div></div>
+    <div class="bubble" id="b-letter"></div>
+    <div class="spacer"></div>
+    <div class="hly">
+      <button class="mic" id="mic-letter" onclick="toggleRec('letter')">🎙️</button>
+      <div class="vstatus" id="st-letter">Anonymous · a stranger will read it</div>
+      <textarea class="ta" id="ta-letter" placeholder="Dear whoever finds this…"></textarea>
+      <div class="row2" style="margin-top:10px">
+        <button class="btn" onclick="saveLetter()">Seal it for the box</button>
+        <button class="btn ghost" style="flex:0 0 34%" onclick="go('hub')">Back</button>
+      </div>
+      <div class="sub" style="font-size:10.5px;margin-top:8px">Sealed tonight · you'll mail it from the post office tomorrow.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ TAROT ═══════════ -->
+<section class="scr" id="tarot" style="background-image:url('4.jpg')">
+  <div class="scrim"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="go('hub')">‹</button><div class="fox" onclick="hostTalk()"></div><div class="brand" style="font-size:14px">STARGAZING</div></div>
+    <div class="bubble" id="b-tarot"></div>
+    <div class="spacer"></div>
+    <div class="hly">
+      <div class="cardwrap" id="cardwrap" style="display:none"><div class="card3d" id="card3d">
+        <div class="face front">✦</div><div class="face back" id="cardback">☾</div></div></div>
+      <div id="tarot-txt"></div>
+      <button class="btn" id="drawbtn" onclick="drawCard()">Draw a card</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ASMR ═══════════ -->
+<section class="scr" id="asmr" style="background-image:url('3.jpg')">
+  <div class="rainfx" id="rainfx"></div>
+  <div class="scrim"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="stopAudio();go('hub')">‹</button><div class="fox" onclick="hostTalk()"></div><div class="brand" style="font-size:14px">SOUND ROOM</div></div>
+    <div class="bubble" id="b-asmr"></div>
+    <div class="spacer"></div>
+    <div class="hly">
+      <div class="chips" id="asmrchips"></div>
+      <div class="vstatus" id="st-asmr"></div>
+      <div class="row2" style="margin-top:14px">
+        <button class="btn ghost" onclick="stopAudio()">Stop</button>
+        <button class="btn" onclick="keepMood()">Keep this mood</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ MUSIC ═══════════ -->
+<section class="scr" id="music" style="background-image:url('4.jpg')">
+  <div class="scrim"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="stopAudio();go('hub')">‹</button><div class="fox" onclick="hostTalk()"></div><div class="brand" style="font-size:14px">MUSIC ROOM</div></div>
+    <div class="bubble" id="b-music"></div>
+    <div class="spacer"></div>
+    <div class="hly">
+      <textarea class="ta" id="ta-music" style="min-height:62px" placeholder="A rainy night, quiet and warm…"></textarea>
+      <button class="btn" onclick="makeSong()">✨ Make tonight's song</button>
+      <div class="vstatus" id="st-music"></div>
+      <div class="row2" style="margin-top:12px">
+        <button class="btn ghost" onclick="stopAudio()">Stop</button>
+        <button class="btn" onclick="keepMood()">Keep this mood</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ SLEEPING ═══════════ -->
+<section class="scr" id="sleeping" style="background-image:url('2.jpg')">
+  <div class="scrim" style="background:rgba(4,4,10,.9)"></div>
+  <div class="content hly" style="justify-content:center">
+    <div style="font-size:44px;opacity:.55">☾</div>
+    <div class="title" style="margin-top:14px;font-size:22px">The inn is open.<br>Sleep well.</div>
+    <div class="sub">Everything you left tonight is being kept.</div>
+    <button class="btn" style="max-width:250px;margin:22px auto 0" onclick="endBusiness()">☀︎ Morning · End business</button>
+  </div>
+</section>
+
+<!-- ═══════════ DAY · MAP ═══════════ -->
+<section class="scr" id="town" style="background-image:url('7.jpg')">
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(30,16,22,.45),rgba(20,10,18,.2) 40%,rgba(16,8,14,.9))"></div>
+  <div class="content">
+    <div class="topbar">
+      <div class="fox" onclick="hostTalk()"></div>
+      <div class="brand" style="font-size:14px">HUSH TOWN</div>
+      <div class="badge" style="background:rgba(255,255,255,.16);color:#fff">CLOSED</div>
+    </div>
+    <div class="hly" style="margin-top:6px">
+      <div class="eyebrow">Good morning</div>
+      <div class="title" style="font-size:22px;margin-top:5px" id="townline">The inn is closed for the day</div>
+    </div>
+    <div class="modeswitch">
+      <button class="mchip on" id="mode-town" onclick="setMapMode('town')">🏘 Hush Town</button>
+      <button class="mchip" id="mode-real" onclick="setMapMode('real')">🌍 The Other Side</button>
+    </div>
+    <div class="mapwrap" id="mapwrap">
+     <div class="flipper" id="flipper">
+      <div class="face face-town">
+        <canvas id="town3d" aria-label="Interactive 3D Hush Inn. Drag to rotate, pinch or scroll to zoom, and tap objects to interact."></canvas>
+        <div class="mapworld" id="mapworld">
+          <div class="bg"></div>
+          <svg class="isodio" id="isodio" viewBox="0 0 1000 1300" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="mscrim"></div>
+        </div>
+        <div class="mapfog"></div>
+      </div>
+      <div class="face face-real">
+       <div id="gmapbox"><div id="gmap"></div><div class="udfx"></div>
+        <div class="udstatus" id="udstatus"></div>
+        <button class="flipbtn" id="photobtn" onclick="wantPhotoreal()" title="Photorealistic mode">✦</button>
+        <div class="nearby" id="nearby"></div>
+       </div>
+      </div>
+     </div>
+      <div class="keypanel" id="keypanel">
+        <div class="kp-t">Photorealistic mode</div>
+        <div class="kp-s">The free map already shows your real buildings in 3D.<br>
+          For <b>photorealistic</b> buildings (Google Earth style) you can add a Google Maps API key — kept on this device only.
+          Enable <b>Maps JavaScript API</b> in Google Cloud; 3D is free while in preview.</div>
+        <input id="gkey" placeholder="Google Maps API key (optional)">
+        <div class="row2" style="margin-top:10px">
+          <button class="btn sm" onclick="saveKey()">Use photoreal</button>
+          <button class="btn ghost sm" style="flex:0 0 40%" onclick="closeKeyPanel()">Not now</button>
+        </div>
+      </div>
+      <div class="mapctl">
+        <button onclick="townCameraZoom(.82)" aria-label="Zoom in">＋</button>
+        <button onclick="townCameraZoom(1.2)" aria-label="Zoom out">－</button>
+        <button onclick="townCameraReset()" aria-label="Reset view">⌖</button>
+      </div>
+      <div class="maptip">drag to rotate · pinch or scroll to zoom</div>
+      <div class="sheet" id="sheet">
+        <div class="sh-t"><span id="sh-ic">🏮</span><span id="sh-n">The Inn</span><span class="sh-x" onclick="closeSheet()">✕</span></div>
+        <div class="sh-s" id="sh-d"></div>
+        <button class="btn sm" id="sh-b" onclick="sheetGo()">Enter</button>
+      </div>
+    </div>
+    <div class="hint" onclick="go('hub')">Night falls again · <b>back to the inn ›</b></div>
+  </div>
+</section>
+
+<!-- ═══════════ DIARY BOOK ═══════════ -->
+<section class="scr" id="book" style="background-image:url('7.jpg')">
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(28,16,22,.6),rgba(16,8,14,.95))"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="go('dayroom')">‹</button><div class="brand" style="font-size:14px">MY DIARY</div></div>
+    <div class="hly" style="margin:10px 0 4px"><div class="title" style="font-size:21px">What the nights kept</div></div>
+    <div class="panel" id="booklist" style="margin-top:12px"></div>
+    <div class="spacer"></div>
+  </div>
+</section>
+
+<!-- ═══════════ POST OFFICE ═══════════ -->
+<section class="scr" id="post" style="background-image:url('7.jpg')">
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(28,16,22,.55),rgba(16,8,14,.95))"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="go('dayroom')">‹</button><div class="brand" style="font-size:14px">LETTER BOX</div></div>
+    <div class="hly" style="margin:10px 0 4px"><div class="title" style="font-size:21px">Send last night's letter</div>
+      <div class="sub">Sealed letters go out anonymously.</div></div>
+    <div class="panel" id="postlist" style="margin-top:12px"></div>
+    <div class="spacer"></div>
+  </div>
+</section>
+
+<!-- ═══════════ PUBLIC BOX ═══════════ -->
+<section class="scr" id="box" style="background-image:url('7.jpg')">
+  <div class="scrim" style="background:linear-gradient(180deg,rgba(28,16,22,.55),rgba(16,8,14,.95))"></div>
+  <div class="content">
+    <div class="topbar"><button class="back" onclick="go('town')">‹</button><div class="brand" style="font-size:14px">LETTER BOX</div></div>
+    <div class="hly" style="margin:10px 0 4px"><div class="title" style="font-size:21px">A letter from someone</div>
+      <div class="sub">Anonymous · you can only send warmth back.</div></div>
+    <div style="margin-top:14px" id="boxbody"></div>
+    <div class="spacer"></div>
+    <button class="btn" onclick="pickLetter()">Open another letter</button>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ══════════ storage ══════════ */
+const DB={
+  get diary(){return JSON.parse(localStorage.getItem('hush.diary')||'[]')},
+  set diary(v){localStorage.setItem('hush.diary',JSON.stringify(v))},
+  get letters(){return JSON.parse(localStorage.getItem('hush.letters')||'[]')},
+  set letters(v){localStorage.setItem('hush.letters',JSON.stringify(v))},
+};
+const today=()=>new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+function addEntry(kind,text,mood){const d=DB.diary;d.unshift({kind,text,mood:mood||'',date:today(),ts:Date.now()});DB.diary=d;}
+
+/* ══════════ host ══════════ */
+const PRESETS=['8.jpg'];
+const innSrc=()=>localStorage.getItem('hush.inn')||'8.jpg';
+const innName=()=>localStorage.getItem('hush.innname')||'Fox';
+function applyInn(){document.querySelectorAll('.fox').forEach(f=>f.style.backgroundImage=`url('${innSrc()}')`);
+  const b=document.getElementById('bigfox');if(b)b.style.backgroundImage=`url('${innSrc()}')`;}
+function buildPicker(){const p=document.getElementById('picker');p.innerHTML='';
+  PRESETS.forEach(s=>{const o=document.createElement('div');o.className='opt'+(innSrc()===s?' sel':'');o.style.backgroundImage=`url('${s}')`;
+    o.onclick=()=>{localStorage.setItem('hush.inn',s);applyInn();buildPicker();};p.appendChild(o);});
+  const up=document.createElement('div');up.className='opt up';up.textContent='＋';up.onclick=()=>document.getElementById('upfile').click();p.appendChild(up);}
+document.getElementById('upfile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{localStorage.setItem('hush.inn',r.result);applyInn();buildPicker();};r.readAsDataURL(f);e.target.value='';};
+document.getElementById('innname').oninput=e=>localStorage.setItem('hush.innname',e.target.value.trim()||'Fox');
+function finishSetup(){localStorage.setItem('hush.setup','1');go('arrival');syncArrival();}
+function syncArrival(){const ready=!!localStorage.getItem('hush.setup'),btn=document.getElementById('arrival-btn');if(!btn)return;document.getElementById('arrival-eyebrow').textContent=ready?'YOUR HOST IS WAITING':'YOUR NIGHT AWAITS';document.getElementById('arrival-title').textContent=ready?'Open the door when you are ready.':'Choose who keeps the inn tonight.';btn.textContent=ready?'Open the front door':'Choose my Night Host';}
+function arrivalAction(){if(!localStorage.getItem('hush.setup')){go('setup');return;}openArrivalDoor();}
+function openArrivalDoor(){if(!localStorage.getItem('hush.setup')){go('setup');return;}document.getElementById('openingmodal').classList.add('on');}
+let interiorTransition = 0;
+async function enterInterior(){
+  if(interiorTransition) return;
+  interiorTransition = -1;
+  await Promise.race([window.hushInteriorReady || Promise.resolve(),new Promise(r=>setTimeout(r,8000))]);
+  document.getElementById('openingmodal').classList.remove('on');localStorage.setItem('hush.openedAt',String(Date.now()));localStorage.setItem('hush.phase','night');go('interior');
+  // Pre-request mic permission while the 2.6s animation plays so voice is ready
+  if(SR){
+    try{const w=new SR();w.lang=ASR_LANG;w.continuous=false;
+      w.onresult=w.onerror=()=>{};
+      w.start();setTimeout(()=>{try{w.stop()}catch(e){}},300);
+    }catch(e){}
+  }
+  interiorTransition = setTimeout(()=>{interiorTransition=0;if(document.getElementById('interior').classList.contains('on'))go('hub');},3200);}
+function renderDayroom(){const started=Number(localStorage.getItem('hush.openedAt'))||Date.now(),ended=Number(localStorage.getItem('hush.closedAt'))||Date.now(),mins=Math.max(1,Math.round((ended-started)/60000)),h=Math.floor(mins/60),m=mins%60;document.getElementById('open-duration').textContent=`OPEN ${h}H ${String(m).padStart(2,'0')}M`;}
+
+/* ══════════ speech ══════════ */
+const TTS_MANIFEST={};
+fetch('/assets/tts/manifest.json').then(r=>r.json()).then(m=>Object.assign(TTS_MANIFEST,m)).catch(()=>{});
+let activeAudio=null;
+function speakPhrase(t){
+  // Aggressively kill any playing audio to prevent overlap
+  if(activeAudio){try{activeAudio.pause();activeAudio.removeAttribute('src');activeAudio.load();}catch(e){}activeAudio=null;}
+  const slug=sha1hex(t).slice(0,12);const mp3='/assets/tts/'+slug+'.mp3';
+  const a=new Audio(mp3);activeAudio=a;
+  const done=()=>{if(activeAudio===a)activeAudio=null;};
+  const fallback=()=>{fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})}).then(r=>{if(!r.ok)throw r;return r.blob()}).then(b=>{const a2=new Audio(URL.createObjectURL(b));a2.play();activeAudio=a2;a2.onended=done;}).catch(()=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.88;u.pitch=1.02;speechSynthesis.speak(u);}catch(e){}});};
+  a.onerror=fallback;a.onended=done;const p=a.play();if(p&&p.catch)p.catch(fallback);
+}
+function sha1hex(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h).toString(16);}
+function speak(t){if(!t)return;speakPhrase(t);}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const ASR_LANG=(navigator.language||'en').startsWith('zh')?'zh-CN':'en-US';
+let rec=null,recOn=false;
+function fallbackToTyping(kind,reason){
+  const ta=document.getElementById('ta-'+kind);
+  if(!ta)return;
+  const st=document.getElementById('st-'+kind);
+  if(st)st.textContent=reason||'Typing is fine too.';
+  ta.placeholder='Type here…';
+  ta.focus();
+}
+function toggleRec(kind){
+  const mic=document.getElementById('mic-'+kind),st=document.getElementById('st-'+kind),ta=document.getElementById('ta-'+kind);
+  if(recOn){try{rec.stop()}catch(e){}return;}
+  if(!SR){fallbackToTyping(kind,'Voice not supported here — type instead');return;}
+  rec=new SR();rec.lang=ASR_LANG;rec.interimResults=true;rec.continuous=true;
+  recOn=true;mic.classList.add('rec');st.textContent='Listening… tap again when done';
+  let base=ta.value?ta.value+' ':'';
+  rec.onresult=e=>{let s='';for(let i=e.resultIndex;i<e.results.length;i++)s+=e.results[i][0].transcript;ta.value=base+s;};
+  rec.onerror=ev=>{recOn=false;mic.classList.remove('rec');
+    if(ev.error==='not-allowed'){fallbackToTyping(kind,'Mic blocked — type instead');}
+    else if(ev.error==='no-speech'){st.textContent='No words detected — tap mic to retry, or type';}
+    else if(ev.error==='network'){fallbackToTyping(kind,'Network issue — type for now');}
+    else{fallbackToTyping(kind,`ASR: ${ev.error}, typing still works`);}
+  };
+  rec.onend=()=>{recOn=false;mic.classList.remove('rec');
+    if(ta.value.trim()&&!st.textContent.includes('blocked')&&!st.textContent.includes('type'))st.textContent='Saved what I heard';};
+  try{rec.start()}catch(e){fallbackToTyping(kind,'Could not start mic — type instead');}
+}
+/* hub intent */
+function listenIntent(){const st=document.getElementById('hubstatus');
+  if(!SR){st.textContent='Voice not supported — tap a room above';return;}
+  const r=new SR();r.lang=ASR_LANG;st.textContent='Listening…';
+  r.onresult=e=>{const t=e.results[0][0].transcript.toLowerCase();st.textContent='”'+t+'”';
+    if(/diary|journal|日记|写|记/.test(t))go('diary');
+    else if(/letter|write to|stranger|信|写信|陌生人/.test(t))go('letter');
+    else if(/card|tarot|draw|塔罗|牌|抽/.test(t))go('tarot');
+    else if(/rain|wave|fire|asmr|sound|noise|雨|火|音|声/.test(t))go('asmr');
+    else if(/song|music|melody/.test(t))go('music');
+    else if(/sleep|tired|goodnight/.test(t))goSleep();
+    else st.textContent='Say: diary · letter · card · rain · song';};
+  r.onerror=ev=>{if(ev.error==='not-allowed')st.textContent='Mic blocked — tap a room instead';
+    else if(ev.error==='no-speech')st.textContent='No words heard — tap a room or try again';
+    else st.textContent='Tap a room above — voice didn\'t catch that';};
+  try{r.start()}catch(e){st.textContent='Tap a room above — mic unavailable';}}
+
+/* host-led, multi-turn night check-in */
+const INTAKE=[
+ {q:()=>`Welcome in. I'm ${innName()}. Before we choose a room, what is keeping you awake?`,a:[['My thoughts are busy','thoughts'],['I feel tense','tense'],['I feel low','low'],['I just want to rest','rest']]},
+ {q:'Would it help more to express something, or to let your mind become quiet?',a:[['I need to express it','express'],['Help me quiet down','quiet'],['I am not sure','unsure']]},
+ {q:'One last thing — do you want words, sound, or a small new perspective tonight?',a:[['Words','words'],['Gentle sound','sound'],['A new perspective','perspective']]}
+];
+let intakeStep=0,intakeAnswers=[],recommendedRoom='diary';
+function startHostIntake(){intakeStep=0;intakeAnswers=[];document.getElementById('dialogname').textContent=innName();document.getElementById('recommendation').classList.remove('on');document.getElementById('continueRec').textContent='Talk with my host';document.getElementById('continueRec').onclick=startHostIntake;showIntake();}
+function showIntake(){const item=INTAKE[intakeStep],q=typeof item.q==='function'?item.q():item.q;document.getElementById('dialogstep').textContent=`CHECK-IN ${intakeStep+1} / ${INTAKE.length}`;document.getElementById('hostprompt').textContent=q;speak(q);const box=document.getElementById('replychips');box.innerHTML='';item.a.forEach(([label,value])=>{const b=document.createElement('button');b.className='replychip';b.textContent=label;b.onclick=()=>answerIntake(value,label);box.appendChild(b);});}
+function answerIntake(value,label){intakeAnswers.push(value);document.getElementById('hubstatus').textContent=`“${label}”`;intakeStep++;if(intakeStep<INTAKE.length){setTimeout(showIntake,280);return;}finishIntake();}
+function finishIntake(){const a=intakeAnswers.join(' ');let title,reason;
+  if(/perspective/.test(a)){recommendedRoom='tarot';title='A reflective card';reason='You want a gentle shift in perspective, without having to solve everything tonight.';}
+  else if(/sound/.test(a)&&/tense|rest|quiet/.test(a)){recommendedRoom='asmr';title='The Sound Room';reason='Your body seems ready for something steady and wordless. I suggest rain or a low fireplace.';}
+  else if(/sound/.test(a)){recommendedRoom='music';title='A song for tonight';reason='You are asking for sound with a little emotion in it, so I can shape a quiet piece around this moment.';}
+  else {recommendedRoom='diary';title='A private voice diary';reason='There is something asking to be expressed. You can speak freely; I will keep it without judgment.';}
+  document.getElementById('hostprompt').textContent=`Thank you. I think I know where we should begin.`;document.getElementById('replychips').innerHTML='';document.getElementById('dialogstep').textContent='A ROOM FOR TONIGHT';document.getElementById('rec-title').textContent=title;document.getElementById('rec-reason').textContent=reason;document.getElementById('recommendation').classList.add('on');const b=document.getElementById('continueRec');b.textContent=`Enter ${title}`;b.onclick=acceptRecommendation;speak(`Thank you. I suggest ${title}.`);}
+function acceptRecommendation(){if(intakeStep<INTAKE.length){startHostIntake();return;}go(recommendedRoom);}
+function listenHostAnswer(){const st=document.getElementById('hubstatus');if(!SR){st.textContent='Voice is unavailable here — choose a reply below.';return;}const r=new SR();r.lang=ASR_LANG;st.textContent='Listening…';r.onresult=e=>{const t=e.results[0][0].transcript.toLowerCase();st.textContent='"' + t + '"';let v='unsure';if(/thought|think|mind|work|想法|思考|工作/.test(t))v='thoughts';else if(/tense|anxious|stress|紧张|焦虑|压力/.test(t))v='tense';else if(/sad|low|lonely|难过|孤独|悲伤/.test(t))v='low';else if(/rest|sleep|tired|休息|睡|累/.test(t))v='rest';else if(/express|talk|say|write|说|写|表达/.test(t))v='express';else if(/quiet|calm|stop|安静|平静/.test(t))v='quiet';else if(/word|diary|journal|日记|文字/.test(t))v='words';else if(/sound|rain|asmr|声音|雨/.test(t))v='sound';else if(/perspective|card|tarot|塔罗|牌|视角/.test(t))v='perspective';answerIntake(v,t);};r.onerror=()=>st.textContent='I missed that — try again or tap a reply.';r.start();}
+
+/* ══════════ continuous voice loop (eyes-free) ══════════ */
+let hubVoiceActive=false, hubVoiceRec=null;
+function startHubVoiceLoop(){
+  if(!SR){
+    document.getElementById('hubstatus').textContent='Voice not supported — tap replies below.';
+    document.getElementById('hubstatus').style.color='';
+    return;
+  }
+  if(hubVoiceActive){return;}
+  hubVoiceActive=true;
+  document.getElementById('hubstatus').textContent='I\'m listening. Just talk to me.';
+  document.getElementById('hubstatus').style.color='var(--amber)';
+  _hubListenOnce();
+}
+function _hubListenOnce(){
+  if(!hubVoiceActive){return;}
+  if(hubVoiceRec){try{hubVoiceRec.stop();}catch(e){}}
+  hubVoiceRec=new SR();
+  hubVoiceRec.lang=ASR_LANG;
+  hubVoiceRec.interimResults=true;
+  hubVoiceRec.continuous=false; // one utterance at a time
+  hubVoiceRec.onresult=e=>{
+    let t='';
+    for(let i=0;i<e.results.length;i++){t+=e.results[i][0].transcript;}
+    t=t.trim();
+    if(!t){return;}
+    document.getElementById('hubstatus').textContent='"'+t+'"';
+    // auto-answer intake if active, otherwise route to rooms
+    if(document.getElementById('replychips').children.length>0&&intakeStep<INTAKE.length){
+      let v='unsure';
+      const lo=t.toLowerCase();
+      if(/thought|think|mind|work|想法|思考|工作/.test(lo))v='thoughts';
+      else if(/tense|anxious|stress|紧张|焦虑|压力/.test(lo))v='tense';
+      else if(/sad|low|lonely|难过|孤独|悲伤/.test(lo))v='low';
+      else if(/rest|sleep|tired|休息|睡|累/.test(lo))v='rest';
+      else if(/express|talk|say|write|说|写|表达/.test(lo))v='express';
+      else if(/quiet|calm|stop|安静|平静/.test(lo))v='quiet';
+      else if(/word|diary|journal|日记|文字/.test(lo))v='words';
+      else if(/sound|rain|asmr|声音|雨/.test(lo))v='sound';
+      else if(/perspective|card|tarot|塔罗|牌|视角/.test(lo))v='perspective';
+      answerIntake(v,t);
+    } else {
+      // freeform routing
+      if(/diary|journal|日记|写|记/.test(t.toLowerCase()))go('diary');
+      else if(/letter|write|stranger|信|写信|陌生人|寄/.test(t.toLowerCase()))go('letter');
+      else if(/card|tarot|draw|塔罗|牌|抽/.test(t.toLowerCase()))go('tarot');
+      else if(/rain|wave|fire|asmr|sound|noise|雨|火|音|声/.test(t.toLowerCase()))go('asmr');
+      else if(/song|music|melody|歌|音乐/.test(t.toLowerCase()))go('music');
+      else if(/sleep|tired|goodnight|睡/.test(t.toLowerCase()))goSleep();
+      else{go('diary');return;} // default: diary
+    }
+  };
+  hubVoiceRec.onerror=ev=>{
+    if(ev.error==='no-speech'){
+      document.getElementById('hubstatus').textContent='Listening…';
+    } else if(ev.error==='not-allowed'){
+      document.getElementById('hubstatus').textContent='Mic blocked — tap a reply instead.';
+      document.getElementById('hubstatus').style.color='';
+      hubVoiceActive=false;return;
+    } else {
+      document.getElementById('hubstatus').textContent='Still here. Keep talking.';
+    }
+  };
+  hubVoiceRec.onend=()=>{
+    // Apply accumulated transcript before resetting
+    if(hubVoiceActive){
+      setTimeout(_hubListenOnce, 500);
+    }
+  };
+  try{hubVoiceRec.start();}catch(e){
+    document.getElementById('hubstatus').textContent='Mic unavailable — tap a reply.';
+    document.getElementById('hubstatus').style.color='';
+    hubVoiceActive=false;
+  }
+}
+function stopHubVoiceLoop(){
+  hubVoiceActive=false;
+  if(hubVoiceRec){try{hubVoiceRec.stop();}catch(e){}hubVoiceRec=null;}
+  document.getElementById('hubstatus').style.color='';
+}
+/* restart loop when coming back to hub — now handled inline in go() above */
+
+/* ══════════ host lines ══════════ */
+const LINES={
+  tavern:()=>`I'm ${innName()}, keeping the inn tonight. Whenever you're ready.`,
+  hub:'',
+  diary:'Say it however it comes out. This one stays with you.',
+  letter:'Someone out there will read this. No names, no replies you have to bear.',
+  tarot:'Tell me what\'s on your mind, then let\'s turn one card.',
+  asmr:'Pick a sound. I\'ll fade it out once you\'re under.',
+  music:'Describe tonight in a few words. I\'ll make something to sleep to.',
+};
+let typer=null;
+function say(id,t){const el=document.getElementById(id);if(!el)return;clearInterval(typer);el.textContent='';let i=0;
+  typer=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(typer);},30);}
+const CHEER=['I\'m right here.','No rush at all.','Take your time.','The lamp stays on.'];
+function hostTalk(){const cur=document.querySelector('.scr.on').id;const el=document.getElementById('b-'+cur);
+  if(el)say('b-'+cur,CHEER[Math.floor(Math.random()*CHEER.length)]);}
+
+/* ══════════ routing ══════════ */
+function go(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  const s=document.getElementById(id);s.classList.add('on');const content=s.querySelector('.content');if(content)content.scrollTop=0;
+  if(id!=='asmr'&&id!=='music')stopAudio();
+  const l=LINES[id];if(l)say('b-'+id,typeof l==='function'?l():l);
+  if(id==='tarot')resetTarot();
+  if(id==='book')renderBook();
+  if(id==='post')renderPost();
+  if(id==='box')pickLetter();
+  if(id==='town')renderTown();
+  if(id==='arrival')syncArrival();
+  if(id==='dayroom')renderDayroom();
+  stopHubVoiceLoop();
+  if(id==='hub'){
+    setTimeout(startHostIntake,180);
+    // Auto-start voice loop — browser requires a user gesture for SpeechRecognition
+    // The "Step inside" button click satisfies this. We start immediately.
+    document.getElementById('hubstatus').textContent='I\'m listening. Just talk to me.';
+    document.getElementById('hubstatus').style.color='var(--amber)';
+    // Short delay to let intake render, then start continuous listening
+    setTimeout(startHubVoiceLoop, 600);
+  }
+}
+function openForBusiness(){openArrivalDoor();}
+function goSleep(){stopAudio();go('sleeping');}
+function endBusiness(){localStorage.setItem('hush.closedAt',String(Date.now()));localStorage.setItem('hush.phase','day');go('dayroom');}
+
+/* ══════════ diary / letter ══════════ */
+function saveDiary(){const t=document.getElementById('ta-diary').value.trim();
+  if(!t){say('b-diary','Nothing yet — say a few words first.');return;}
+  addEntry('diary',t,moodFromText(t));document.getElementById('ta-diary').value='';
+  say('b-diary','Kept in your diary. It\'s safe here.');speak('Kept in your diary.');setTimeout(()=>go('hub'),1400);}
+function saveLetter(){const t=document.getElementById('ta-letter').value.trim();
+  if(!t){say('b-letter','Write a line or two, then I\'ll seal it.');return;}
+  const L=DB.letters;L.unshift({text:t,date:today(),sent:false,ts:Date.now()});DB.letters=L;
+  document.getElementById('ta-letter').value='';addEntry('letter','Sealed a letter for the box.','hopeful');
+  say('b-letter','Sealed. Mail it from the post office tomorrow.');speak('Sealed.');setTimeout(()=>go('hub'),1500);}
+function moodFromText(t){t=t.toLowerCase();
+  if(/tired|exhaust|drained|worn/.test(t))return'weary';
+  if(/anxious|worry|scared|stress|nervous/.test(t))return'restless';
+  if(/sad|cry|lonely|miss|hurt/.test(t))return'tender';
+  if(/happy|good|grateful|calm|better/.test(t))return'light';
+  return'quiet';}
+
+/* ══════════ tarot ══════════ */
+const CARDS=[
+ ['☾','The Moon · Feeling','The tide in your chest goes out on its own. Let it rise a while first.'],
+ ['✦','The Star · Hope','Some nights are dark so you can find the light you carry.'],
+ ['✵','The Tower · Letting go','What fell apart was making room. You don\'t have to rebuild it tonight.'],
+ ['❋','The Garden · Patience','Nothing blooms on the night it\'s planted. You\'re still growing.']];
+function resetTarot(){document.getElementById('cardwrap').style.display='none';
+  document.getElementById('card3d').classList.remove('flip');
+  document.getElementById('tarot-txt').innerHTML='';document.getElementById('drawbtn').style.display='';}
+function drawCard(){const c=CARDS[Math.floor(Math.random()*CARDS.length)];
+  document.getElementById('drawbtn').style.display='none';
+  document.getElementById('cardwrap').style.display='block';document.getElementById('cardback').textContent=c[0];
+  setTimeout(()=>document.getElementById('card3d').classList.add('flip'),80);
+  setTimeout(()=>{document.getElementById('tarot-txt').innerHTML=
+    `<div class="title" style="font-size:18px;margin-top:15px">${c[1]}</div>
+     <div class="sub" style="color:#f0e6dc;font-size:13.5px">${c[2]}</div>
+     <button class="btn ghost sm" onclick="go('hub')">Back to the hall</button>`;
+    say('b-tarot','That one\'s for tonight.');speak(c[2]);
+    addEntry('tarot',c[1]+' — '+c[2],'reflective');},1050);}
+
+/* ══════════ audio ══════════ */
+let AC=null,nodes=[],curMood='';
+const ac=()=>{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC;};
+function stopAudio(){nodes.forEach(n=>{try{n.stop&&n.stop()}catch(e){}try{n.disconnect()}catch(e){}});nodes=[];
+  const fx=document.getElementById('rainfx');if(fx)fx.classList.remove('on');
+  document.querySelectorAll('#asmrchips .chip').forEach(c=>c.classList.remove('on'));}
+function noise(type){const a=ac(),len=a.sampleRate*2,b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);let last=0;
+  for(let i=0;i<len;i++){const w=Math.random()*2-1;
+    if(type==='brown'){last=(last+.02*w)/1.02;d[i]=last*3.2}else if(type==='pink'){last=.98*last+.02*w;d[i]=w*.4+last*.6}else d[i]=w;}
+  return b;}
+const SOUNDS=[['rain','🌧️','Rain','tender'],['waves','🌊','Waves','calm'],['fire','🔥','Fireplace','warm'],['wind','🌬️','Night wind','wistful'],['hum','🌫️','White hum','numb']];
+function buildChips(){const c=document.getElementById('asmrchips');c.innerHTML='';
+  SOUNDS.forEach(([k,ic,nm])=>{const el=document.createElement('div');el.className='chip';el.textContent=ic+' '+nm;
+    el.onclick=()=>playSound(k,el);c.appendChild(el);});}
+function playSound(kind,el){stopAudio();if(el)el.classList.add('on');
+  const a=ac(),src=a.createBufferSource();
+  src.buffer=noise(kind==='rain'?'pink':(kind==='hum'?'white':'brown'));src.loop=true;
+  const lp=a.createBiquadFilter();lp.type='lowpass';
+  lp.frequency.value={rain:1600,waves:520,fire:900,wind:400,hum:7000}[kind]||1200;
+  const g=a.createGain();g.gain.value=kind==='hum'?.22:.5;
+  src.connect(lp);lp.connect(g);g.connect(a.destination);src.start();nodes=[src,lp,g];
+  if(kind==='waves'||kind==='wind'){const lfo=a.createOscillator();lfo.frequency.value=kind==='waves'?.14:.08;
+    const la=a.createGain();la.gain.value=kind==='waves'?260:180;lfo.connect(la);la.connect(lp.frequency);lfo.start();nodes.push(lfo,la);}
+  if(kind==='rain')document.getElementById('rainfx').classList.add('on');
+  curMood=(SOUNDS.find(s=>s[0]===kind)||[])[3]||'quiet';
+  document.getElementById('st-asmr').textContent='Playing · mood reads as “'+curMood+'”';}
+/* generative song (offline fallback; swap for ElevenLabs Music) */
+function makeSong(){const p=(document.getElementById('ta-music').value||'a quiet night').trim();
+  stopAudio();const st=document.getElementById('st-music');st.textContent='Composing…';
+  const h=[...p].reduce((x,c)=>(x*31+c.charCodeAt(0))>>>0,0);
+  const bright=h%2===0,root=[196,220,174.6,164.8][h%4],scale=bright?[0,3,5,7,10]:[0,2,3,7,8];
+  const a=ac(),bus=a.createGain();bus.gain.value=.0001;bus.connect(a.destination);
+  bus.gain.exponentialRampToValueAtTime(.5,a.currentTime+3);nodes.push(bus);
+  const src=a.createBufferSource();src.buffer=noise('brown');src.loop=true;
+  const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;
+  const ng=a.createGain();ng.gain.value=.16;src.connect(lp);lp.connect(ng);ng.connect(bus);src.start();nodes.push(src,lp,ng);
+  let alive=true;const stopFlag=()=>alive=false;nodes.push({stop:stopFlag,disconnect:stopFlag});
+  (function pluck(){if(!alive)return;
+    const semi=scale[Math.floor(Math.random()*scale.length)]+(Math.random()<.4?12:0),f=root*Math.pow(2,semi/12);
+    const o=a.createOscillator();o.type='triangle';o.frequency.value=f;
+    const g=a.createGain();g.gain.value=.0001;o.connect(g);g.connect(bus);
+    const t=a.currentTime;g.gain.exponentialRampToValueAtTime(.16,t+.6);g.gain.exponentialRampToValueAtTime(.0001,t+3.2);
+    o.start(t);o.stop(t+3.4);setTimeout(pluck,1500+Math.random()*1700);})();
+  curMood=bright?'hopeful':'wistful';
+  st.textContent='Tonight\'s song · mood reads as “'+curMood+'”';
+  say('b-music','Made from your words. I\'ll fade it out when you\'re under.');}
+function keepMood(){if(!curMood){say(document.querySelector('.scr.on').id==='music'?'b-music':'b-asmr','Play something first.');return;}
+  addEntry('mood','Fell asleep to something '+curMood+'.',curMood);
+  const cur=document.querySelector('.scr.on').id;say('b-'+cur,'Noted in tonight\'s page: “'+curMood+'”.');
+  setTimeout(()=>goSleep(),1200);}
+
+/* ══════════ MAP · a road receding into the distance ══════════
+   Add a location = add one object.  side:-1 left / +1 right, t = distance (0 near → 1 far) */
+const PLACES=[
+ {id:'inn',   ic:'🏮', name:'The Inn',      x:500, y:1105, w:212, h:150, roof:'gable', go:'hub', ll:[0,0],
+  pal:['#2c3760','#f4dccb','#8a5340'], d:'Where the night begins. Open the lamps and close your eyes.'},
+ {id:'post',  ic:'📮', name:'Post Office',  x:252, y:900,  w:158, h:124, roof:'gable', go:'post', ll:[.0016,-.0022],
+  pal:['#2a3358','#efd6c6','#7d4a3c'], badge:()=>DB.letters.filter(l=>!l.sent).length,
+  d:'Mail the letters you sealed last night.'},
+ {id:'book',  ic:'📖', name:'Diary',        x:744, y:752,  w:158, h:132, roof:'gable', go:'book', ll:[.0026,.0020],
+  pal:['#303a66','#f2dbc9','#84503f'], d:'Everything the nights kept for you.'},
+ {id:'box',   ic:'🗃️', name:'Letter Box',   x:296, y:586,  w:140, h:112, roof:'gable', go:'box', ll:[.0042,-.0016],
+  pal:['#2b3459','#eed5c3','#7a4939'], d:'Read a letter from a stranger. Send warmth back.'},
+ {id:'garden',ic:'🌿', name:'Garden',       x:722, y:436,  w:172, h:88,  roof:'none',  go:'',    ll:[.0050,.0028],
+  pal:['#3d5a4a','#dfeadb','#4d6b52'], d:'Something grows here for every night you sleep well.'},
+ {id:'clock', ic:'🕰', name:'Clock Tower',  x:330, y:326,  w:110, h:170, roof:'tower', locked:true, ll:[.0064,-.0008],
+  pal:['#232c52','#f0d9c8','#7b4a3b'], d:'Not open yet — the tower keeps the town\'s hours.'},
+ {id:'well',  ic:'🕯', name:'Wishing Well', x:694, y:170,  w:132, h:100, roof:'gable', locked:true, ll:[.0074,.0022],
+  pal:['#2a3152','#e8d3c4','#6f4638'], d:'Not open yet — for the wishes too quiet to say.'},
+];
+let mapT={x:0,y:0,k:1},selPlace=null;
+
+/* cute 2D map · coords are absolute in a 1000×1300 canvas */
+
+/* one cozy night house, in the style of a lit miniature village */
+function houseArt(p,i,scale){
+  const s=scale||1, w=p.w*s, h=p.h*s, x=0, y=0, top=y-h;
+  const [roofC,wallC,trimC]=p.pal, glow=p.locked?'#7d8aa8':'#ffcf7a';
+  const eave=w*.1, rh=h*.62;
+  let roof='',extra='';
+  if(p.roof==='tower'){
+    roof=`<polygon points="${x-w*.42},${top} ${x},${top-h*.52} ${x+w*.42},${top}" fill="${roofC}"/>
+      <polygon points="${x-w*.42},${top} ${x},${top-h*.52} ${x},${top}" fill="#000" opacity=".14"/>
+      <rect x="${x-2*s}" y="${top-h*.66}" width="${4*s}" height="${h*.15}" fill="${roofC}"/>
+      <circle cx="${x}" cy="${top-h*.69}" r="${4*s}" fill="${glow}"/>`;
+    extra=`<circle cx="${x}" cy="${top+h*.24}" r="${w*.26}" fill="#fff6e2" stroke="${trimC}" stroke-width="${3*s}"/>
+      <line x1="${x}" y1="${top+h*.24}" x2="${x}" y2="${top+h*.13}" stroke="${trimC}" stroke-width="${3*s}" stroke-linecap="round"/>
+      <line x1="${x}" y1="${top+h*.24}" x2="${x+w*.14}" y2="${top+h*.27}" stroke="${trimC}" stroke-width="${3*s}" stroke-linecap="round"/>
+      <circle cx="${x}" cy="${top+h*.24}" r="${w*.32}" fill="${glow}" opacity=".2"/>`;
+  } else if(p.roof==='none'){
+    roof=`<ellipse cx="${x}" cy="${top+h*.42}" rx="${w*.46}" ry="${h*.55}" fill="${roofC}"/>
+      <circle cx="${x-w*.24}" cy="${top+h*.4}" r="${h*.36}" fill="${roofC}" opacity=".9"/>
+      <circle cx="${x+w*.26}" cy="${top+h*.46}" r="${h*.32}" fill="${roofC}" opacity=".9"/>
+      ${[-.3,-.05,.22].map((o,k)=>`<circle cx="${x+w*o}" cy="${top+h*(.3+k*.14)}" r="${5*s}" fill="${['#f2a0b6','#ffd98a','#e0a6e8'][k]}"/>`).join('')}`;
+  } else {
+    /* steep gable roof with overhang + ridge highlight */
+    roof=`<polygon points="${x-w/2-eave},${top+h*.06} ${x},${top-rh*.55} ${x+w/2+eave},${top+h*.06}" fill="${roofC}"/>
+      <polygon points="${x-w/2-eave},${top+h*.06} ${x},${top-rh*.55} ${x},${top+h*.06}" fill="#fff" opacity=".07"/>
+      <polygon points="${x-w/2-eave},${top+h*.06} ${x+w/2+eave},${top+h*.06} ${x+w/2+eave},${top+h*.12} ${x-w/2-eave},${top+h*.12}" fill="#1c2440" opacity=".5"/>
+      <rect x="${x+w*.22}" y="${top-rh*.28}" width="${w*.12}" height="${h*.3}" rx="${2*s}" fill="${trimC}"/>
+      <rect x="${x+w*.2}" y="${top-rh*.3}" width="${w*.16}" height="${h*.06}" rx="${2*s}" fill="#2a3358"/>`;
+  }
+  /* wall + subtle details (no beams) */
+  const wall=p.roof==='none'?'':`
+    <rect x="${x-w/2}" y="${top+h*.06}" width="${w}" height="${h*.94}" rx="${4*s}" fill="${wallC}"/>
+    <g stroke="${trimC}" stroke-width="${2*s}" opacity=".35">
+      <line x1="${x-w/2+3}" y1="${top+h*.06}" x2="${x-w/2+3}" y2="${y-5}"/>
+      <line x1="${x+w/2-3}" y1="${top+h*.06}" x2="${x+w/2-3}" y2="${y-5}"/>
+    </g>`;
+  /* glowing windows */
+  let win='';
+  if(p.roof!=='none'){
+    const spots=[[-.3,.24],[.3,.24],[-.3,.7],[.32,.72]];
+    spots.forEach(([ox,oy],k)=>{
+      const ww=w*.19, hh=h*.2, wx=x+w*ox-ww/2, wy=top+h*oy;
+      win+=`<circle cx="${wx+ww/2}" cy="${wy+hh/2}" r="${ww*1.5}" fill="${glow}" opacity="${p.locked?.05:.22}"/>
+        <rect x="${wx}" y="${wy}" width="${ww}" height="${hh}" rx="${2*s}" fill="${glow}" opacity="${p.locked?.5:.95}"/>
+        <line x1="${wx+ww/2}" y1="${wy}" x2="${wx+ww/2}" y2="${wy+hh}" stroke="${trimC}" stroke-width="${1.6*s}"/>`;
+    });
+    /* arched wooden door + lantern + planters */
+    win+=`<rect x="${x-w*.12}" y="${top+h*.1}" width="${w*.24}" height="${h*.56}" rx="${3*s}" fill="#3d2817"/>
+      <rect x="${x-w*.11}" y="${top+h*.11}" width="${w*.22}" height="${h*.54}" rx="${2.5*s}" fill="#5a3d2a"/>
+      <circle cx="${x+w*.08}" cy="${top+h*.38}" r="${w*.07}" fill="#8B6F47" stroke="#3d2817" stroke-width="${1.5*s}"/>
+      <circle cx="${x+w*.08}" cy="${top+h*.38}" r="${w*.06}" fill="#A0826D"/>
+      <circle cx="${x+w*.06}" cy="${top+h*.82}" r="${2.6*s}" fill="#ffe6b8"/>
+      <circle cx="${x-w*.26}" cy="${top+h*.62}" r="${3.4*s}" fill="${glow}"/>
+      <circle cx="${x-w*.26}" cy="${top+h*.62}" r="${11*s}" fill="${glow}" opacity=".22"/>
+      <rect x="${x+w*.18}" y="${y-h*.1}" width="${w*.14}" height="${h*.1}" rx="${2*s}" fill="#8a5a4a"/>
+      <circle cx="${x+w*.25}" cy="${y-h*.12}" r="${4*s}" fill="#f2a0b6"/>`;
+  }
+  return roof+wall+win+extra;
+}
+
+function cuteBuilding(p,i){
+  const {x,y,w,h}=p;
+  const badge=p.badge&&p.badge()>0?`
+    <circle cx="${w*.5}" cy="${-h*1.05}" r="19" fill="#ff8f8f" stroke="#fff" stroke-width="3"/>
+    <text x="${w*.5}" y="${-h*1.05+7}" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">${p.badge()}</text>`:'';
+  const lw=p.name.length*11+34;
+  return `<g class="isoplace${p.locked?' locked':''}" data-id="${p.id}" style="animation:isopop .5s ${(i*80)}ms backwards">
+    <ellipse class="glow" cx="${x}" cy="${y-h*.35}" rx="${w*1.05}" ry="${h*.95}" fill="#ffcf7a"/>
+    <ellipse cx="${x}" cy="${y+9}" rx="${w*.6}" ry="${17}" fill="#0e142c" opacity=".5"/>
+    <ellipse cx="${x}" cy="${y+6}" rx="${w*.85}" ry="${26}" fill="#ffcf7a" opacity="${p.locked?.05:.13}"/>
+    <g class="bob" style="animation-delay:${(i*.35).toFixed(2)}s" transform="translate(${x},${y})">${houseArt(p,i,1)}${badge}</g>
+    <g class="pill"><rect x="${x-lw/2}" y="${y+20}" width="${lw}" height="34" rx="17" fill="#101830" opacity=".8"/>
+      <text class="lbl" x="${x}" y="${y+43}" text-anchor="middle" font-size="19">${p.name}</text></g>
+  </g>`;
+}
+
+function buildMap(){
+  const svg=document.getElementById('isodio');
+  const pts=PLACES.map(p=>[p.x,p.y]);
+  /* winding cobblestone path, bottom → top */
+  let dpath=`M500,1290 `;
+  pts.forEach(([px,py],i)=>{const [qx,qy]=i?pts[i-1]:[500,1290];
+    dpath+=`Q${(px+qx)/2+(i%2?150:-150)},${(py+qy)/2} ${px},${py+26} `;});
+  dpath+=`Q560,90 620,40`;
+  const path=`<path d="${dpath}" fill="none" stroke="#4a4f74" stroke-width="60" stroke-linecap="round" opacity=".9"/>
+    <path d="${dpath}" fill="none" stroke="#6b6f96" stroke-width="48" stroke-linecap="round"/>
+    <path d="${dpath}" fill="none" stroke="#8f92b8" stroke-width="44" stroke-dasharray="7 11" stroke-linecap="round" opacity=".55"/>
+    <path d="${dpath}" fill="none" stroke="#b6b8d6" stroke-width="3" stroke-dasharray="2 22" stroke-linecap="round" opacity=".5"/>`;
+  /* scenery: dark hedges, pines, lanterns, mist */
+  const rnd=s=>{const v=Math.sin(s*127.1)*43758.5453;return v-Math.floor(v);};
+  let deco='';
+  for(let i=0;i<30;i++){
+    const x=60+rnd(i)*880, y=80+rnd(i+7)*1160;
+    if(PLACES.some(p=>Math.abs(p.x-x)<180&&Math.abs(p.y-y)<160))continue;
+    if(Math.abs(x-500)<80&&y>1150)continue;
+    const s=.7+rnd(i+3)*.6;
+    if(i%3===0) deco+=`<g><ellipse cx="${x}" cy="${y+4}" rx="${24*s}" ry="${8*s}" fill="#0d1329" opacity=".45"/>
+      <rect x="${x-5*s}" y="${y-30*s}" width="${10*s}" height="${32*s}" rx="${4*s}" fill="#3a2f3f"/>
+      <polygon points="${x},${y-84*s} ${x+26*s},${y-26*s} ${x-26*s},${y-26*s}" fill="#2f4a45"/>
+      <polygon points="${x},${y-104*s} ${x+20*s},${y-56*s} ${x-20*s},${y-56*s}" fill="#3a5a51"/></g>`;
+    else if(i%3===1) deco+=`<g><ellipse cx="${x}" cy="${y}" rx="${30*s}" ry="${16*s}" fill="#2c4640"/>
+      <ellipse cx="${x}" cy="${y-5*s}" rx="${28*s}" ry="${13*s}" fill="#37544b"/>
+      <circle cx="${x-12*s}" cy="${y-8*s}" r="${3.6*s}" fill="#f2a0b6"/><circle cx="${x+11*s}" cy="${y-3*s}" r="${3.2*s}" fill="#ffd98a"/></g>`;
+    else deco+=`<g><rect x="${x-2*s}" y="${y-44*s}" width="${4*s}" height="${46*s}" fill="#3c3550"/>
+      <circle cx="${x}" cy="${y-50*s}" r="${7*s}" fill="#ffcf7a"/>
+      <circle cx="${x}" cy="${y-50*s}" r="${22*s}" fill="#ffcf7a" opacity=".18"/>
+      <ellipse cx="${x}" cy="${y+2}" rx="${30*s}" ry="${9*s}" fill="#ffcf7a" opacity=".1"/></g>`;
+  }
+  const stars=Array.from({length:70},(_,i)=>{
+    const x=(i*149)%1000, y=(i*233)%1300, r=(i%3)*.6+1;
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="#ffe9c8" opacity="${.18+(i%5)*.12}"/>`;}).join('');
+  const mist=[[240,300,320,70],[760,560,300,60],[420,880,360,70],[700,1150,300,60],[160,660,260,55]]
+    .map(([x,y,rx,ry])=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="#9fb2d8" opacity=".13" filter="url(#blur)"/>`).join('');
+  svg.innerHTML=`<defs>
+      <linearGradient id="gnight" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#131b3c"/><stop offset=".45" stop-color="#1b2447"/><stop offset="1" stop-color="#232c52"/></linearGradient>
+      <filter id="blur"><feGaussianBlur stdDeviation="26"/></filter>
+      <radialGradient id="gmoon"><stop offset="0" stop-color="#fff3d6"/><stop offset="1" stop-color="#ffe6b0"/></radialGradient>
+    </defs>
+    <rect x="0" y="0" width="1000" height="1300" fill="url(#gnight)"/>
+    ${stars}
+    <circle cx="838" cy="120" r="86" fill="#ffe6b0" opacity=".12"/>
+    <path d="M862,74 A52,52 0 1 0 862,166 A40,40 0 1 1 862,74 Z" fill="url(#gmoon)"/>
+    ${mist}${path}${deco}
+    ${PLACES.map((p,i)=>cuteBuilding(p,i)).join('')}`;
+  svg.querySelectorAll('.isoplace').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();selectPlace(el.dataset.id,el);});});
+}
+function selectPlace(id,el){
+  selPlace=PLACES.find(p=>p.id===id);
+  document.querySelectorAll('.isoplace').forEach(p=>p.classList.remove('sel'));
+  if(el)el.classList.add('sel');
+  document.getElementById('sh-ic').textContent=selPlace.ic;
+  document.getElementById('sh-n').textContent=selPlace.name;
+  document.getElementById('sh-d').textContent=selPlace.d;
+  const btn=document.getElementById('sh-b');
+  if(selPlace.locked){btn.textContent='Coming soon';btn.disabled=true;btn.style.opacity=.5;}
+  else if(!selPlace.go){btn.textContent='Take a look';btn.disabled=false;btn.style.opacity=1;}
+  else {btn.textContent='Enter';btn.disabled=false;btn.style.opacity=1;}
+  document.getElementById('sheet').classList.add('on');
+}
+function closeSheet(){document.getElementById('sheet').classList.remove('on');
+  document.querySelectorAll('.isoplace').forEach(p=>p.classList.remove('sel'));}
+function sheetGo(){if(!selPlace)return;
+  if(selPlace.go){closeSheet();go(selPlace.go);}
+  else {document.getElementById('sh-d').textContent='The garden is quiet today. Come back after a few more good nights.';}}
+
+/* pan + zoom */
+function applyT(){document.getElementById('mapworld').style.transform=
+  `translate(${mapT.x}px,${mapT.y}px) scale(${mapT.k})`;}
+function worldSize(){const el=document.getElementById('mapworld');
+  return[el.offsetWidth||1,el.offsetHeight||1];}
+function clampT(){const w=document.getElementById('mapwrap');if(!w)return;
+  const vw=w.clientWidth,vh=w.clientHeight,[W,H]=worldSize(),ww=W*mapT.k,wh=H*mapT.k;
+  mapT.x=ww<=vw?(vw-ww)/2:Math.min(0,Math.max(vw-ww,mapT.x));
+  mapT.y=wh<=vh?(vh-wh)/2:Math.min(0,Math.max(vh-wh,mapT.y));}
+function mapReset(){const w=document.getElementById('mapwrap');if(!w)return;
+  const vw=w.clientWidth,vh=w.clientHeight,[W,H]=worldSize();
+  mapT.k=1;mapT.x=-(W-vw)/2;mapT.y=-(H-vh);      /* start at the near end of the road */
+  clampT();applyT();}
+function mapZoom(f,cx,cy){const w=document.getElementById('mapwrap');if(!w)return;
+  const k0=mapT.k,k=Math.max(.75,Math.min(2.2,k0*f));
+  cx=cx??w.clientWidth/2;cy=cy??w.clientHeight/2;
+  mapT.x=cx-(cx-mapT.x)*(k/k0);mapT.y=cy-(cy-mapT.y)*(k/k0);mapT.k=k;clampT();applyT();}
+function initMapGestures(){
+  const w=document.getElementById('mapwrap');if(!w||w.dataset.init)return;w.dataset.init='1';
+  let dragging=false,sx=0,sy=0,ox=0,oy=0,moved=0,pts=new Map(),pd=0;
+  w.addEventListener('pointerdown',e=>{if(mapMode!=='town')return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===1){dragging=true;moved=0;sx=e.clientX;sy=e.clientY;ox=mapT.x;oy=mapT.y;w.classList.add('drag');w.setPointerCapture(e.pointerId);}
+    else if(pts.size===2){dragging=false;const[a,b]=[...pts.values()];pd=Math.hypot(a.x-b.x,a.y-b.y);}});
+  w.addEventListener('pointermove',e=>{
+    if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2){const[a,b]=[...pts.values()],d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(pd){const r=w.getBoundingClientRect();mapZoom(d/pd,(a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top);}pd=d;return;}
+    if(!dragging)return;
+    moved=Math.max(moved,Math.abs(e.clientX-sx)+Math.abs(e.clientY-sy));
+    mapT.x=ox+(e.clientX-sx);mapT.y=oy+(e.clientY-sy);clampT();applyT();});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pd=0;
+    if(dragging){dragging=false;w.classList.remove('drag');if(moved<6)closeSheet();}};
+  w.addEventListener('pointerup',up);w.addEventListener('pointercancel',up);
+  w.addEventListener('wheel',e=>{if(mapMode!=='town')return;e.preventDefault();const r=w.getBoundingClientRect();
+    mapZoom(e.deltaY<0?1.12:.9,e.clientX-r.left,e.clientY-r.top);},{passive:false});
+}
+
+/* ══════════ REAL WORLD · the Upside Down (Google Maps) ══════════ */
+let mapMode=localStorage.getItem('hush.mapmode')||'town', gmap=null, gmapLoaded=false, gmap3d=false;
+const gkey=()=>localStorage.getItem('hush.gkey')||'';
+
+function setMapMode(m){
+  mapMode=m; localStorage.setItem('hush.mapmode',m);
+  document.getElementById('mode-town').classList.toggle('on',m==='town');
+  document.getElementById('mode-real').classList.toggle('on',m==='real');
+  const wrap=document.getElementById('mapwrap'), kp=document.getElementById('keypanel'),
+        ctl=document.querySelector('.mapctl'), tip=document.querySelector('.maptip');
+  closeSheet();
+  wrap.classList.toggle('showreal',m==='real');           // turn the world over
+  ctl.style.display = m==='town'?'':'none';
+  if(tip)tip.style.display = m==='town'?'':'none';
+  if(m==='town'){kp.classList.remove('on');return;}
+  kp.classList.remove('on');
+  if(gkey())loadGoogleMaps(); else loadFreeMap();
+}
+function saveKey(){const v=document.getElementById('gkey').value.trim();
+  if(!v)return;localStorage.setItem('hush.gkey',v);gmapLoaded=false;setMapMode('real');}
+function closeKeyPanel(){document.getElementById('keypanel').classList.remove('on');if(!gmap)loadFreeMap();}
+function wantPhotoreal(){document.getElementById('keypanel').classList.add('on');
+  document.getElementById('gkey').value=gkey();}
+
+/* ── FREE PATH · MapLibre + OpenFreeMap (no key, no signup, real 3D buildings) ── */
+let freeMap=null;
+function loadFreeMap(){
+  if(freeMap){return;}
+  udStatus('Opening the other side…');
+  const css=document.createElement('link');css.rel='stylesheet';
+  css.href='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';document.head.appendChild(css);
+  const s=document.createElement('script');s.src='https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+  s.onload=initFreeMap;
+  s.onerror=()=>udStatus('Couldn\'t load the map library — check your connection.');
+  document.head.appendChild(s);
+}
+async function initFreeMap(){
+  const saved=JSON.parse(localStorage.getItem('hush.home')||'null');
+  udStatus('Finding where you are…');
+  const c=await new Promise(res=>{
+    if(!navigator.geolocation)return res(saved||{lat:22.5431,lng:114.0579});
+    navigator.geolocation.getCurrentPosition(
+      p=>{const v={lat:p.coords.latitude,lng:p.coords.longitude};
+        localStorage.setItem('hush.home',JSON.stringify(v));res(v);},
+      ()=>res(saved||{lat:22.5431,lng:114.0579}),{timeout:9000,enableHighAccuracy:true});
+  });
+  const host=document.getElementById('gmap');host.innerHTML='';
+  freeMap=new maplibregl.Map({container:host,
+    style:'https://tiles.openfreemap.org/styles/liberty',
+    center:[c.lng,c.lat],zoom:17,pitch:62,bearing:24,attributionControl:false});
+  gmap=freeMap;gmap3d=false;
+  freeMap.on('load',()=>{
+    /* force every label to English */
+    try{freeMap.getStyle().layers.forEach(l=>{
+      if(l.type==='symbol'&&l.layout&&l.layout['text-field'])
+        freeMap.setLayoutProperty(l.id,'text-field',
+          ['coalesce',['get','name:en'],['get','name:latin'],['get','name_en'],['get','name']]);});
+    }catch(e){}
+    try{
+      freeMap.addLayer({id:'hush-3d',source:'openmaptiles','source-layer':'building',
+        type:'fill-extrusion',minzoom:14,
+        paint:{'fill-extrusion-color':['interpolate',['linear'],
+                 ['coalesce',['get','render_height'],['get','height'],10],
+                 0,'#2a3358',40,'#3a4573',120,'#4c548c'],
+               'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],10],
+               'fill-extrusion-base':['coalesce',['get','render_min_height'],['get','min_height'],0],
+               'fill-extrusion-opacity':.92}});
+    }catch(e){}
+    udStatus('The Upside Down · your street, turned over');
+    freeMap.once('idle',()=>nearbyFromMap(c));
+  });
+}
+/* real named places straight from the map's own OSM data — no Places API needed */
+function nearbyFromMap(center){
+  const box=document.getElementById('nearby');box.innerHTML='';
+  let feats=[];
+  try{feats=freeMap.queryRenderedFeatures();}catch(e){}
+  const seen=new Set(),list=[];
+  feats.forEach(f=>{
+    const n=f.properties&&(f.properties.name||f.properties['name:en']);
+    if(!n||seen.has(n)||!f.geometry)return;
+    let lng,lat;
+    const g=f.geometry;
+    if(g.type==='Point'){[lng,lat]=g.coordinates;}
+    else{const cs=(g.coordinates.flat(3));lng=cs[0];lat=cs[1];}
+    if(typeof lng!=='number')return;
+    seen.add(n);
+    list.push({name:n,type:(f.properties.class||f.properties.subclass||'place').replace(/_/g,' '),
+      loc:{lat,lng},d:Math.hypot(lat-center.lat,lng-center.lng)});
+  });
+  list.sort((a,b)=>a.d-b.d);
+  const top=list.slice(0,12);
+  if(!top.length){box.innerHTML='<div class="nb"><b>Nothing named nearby</b><span>quiet out there tonight</span></div>';
+    placeHouses([{loc:center}]);return;}
+  const rooms=PLACES.filter(p=>!p.locked);
+  top.forEach((n,i)=>{const room=rooms[i];
+    const el=document.createElement('div');el.className='nb'+(room?' host':'');
+    el.innerHTML=`<b>${esc(n.name)}</b><span>${room?room.ic+' '+room.name:esc(n.type)}</span>`;
+    el.onclick=()=>{flyTo(n.loc);if(room)selectPlace(room.id,null);};
+    box.appendChild(el);});
+  placeHouses(top);
+  udStatus(`${top.length} real places around you · the nearest is tonight's inn`);
+}
+/* drop the glowing Hush houses onto real buildings */
+function placeHouses(spots){
+  if(!window.maplibregl||!freeMap)return;
+  const rooms=PLACES.filter(p=>!p.locked);
+  spots.slice(0,rooms.length).forEach((sp,i)=>{
+    const p=rooms[i];const el=document.createElement('div');
+    el.style.cssText='width:96px;height:96px;cursor:pointer';
+    el.innerHTML=`<svg viewBox="-90 -140 180 180" width="96" height="96"><g transform="rotate(180)">
+      <ellipse cx="0" cy="6" rx="${p.w*.34}" ry="12" fill="#070b1c" opacity=".5"/>
+      <ellipse cx="0" cy="2" rx="${p.w*.5}" ry="20" fill="#ffcf7a" opacity=".18"/>
+      ${houseArt(p,i,.6)}</g></svg>`;
+    el.onclick=()=>selectPlace(p.id,null);
+    new maplibregl.Marker({element:el}).setLngLat([sp.loc.lng,sp.loc.lat]).addTo(freeMap);
+  });
+}
+
+const udStatus=t=>{const el=document.getElementById('udstatus');if(el)el.textContent=t;};
+
+/* dynamic loader — alpha channel is required for photorealistic 3D (maps3d) */
+function loadGoogleMaps(){
+  if(window.google&&window.google.maps){startRealWorld();return;}
+  if(gmapLoaded)return; gmapLoaded=true;
+  udStatus('Opening the other side…');
+  const s=document.createElement('script');
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(gkey())}&v=alpha&libraries=maps3d,places&language=en&region=US&loading=async`;
+  s.async=true;
+  s.onload=()=>startRealWorld();
+  s.onerror=()=>{gmapLoaded=false;document.getElementById('keypanel').classList.add('on');
+    document.querySelector('.keypanel .kp-s').innerHTML='Couldn\'t load Google Maps.<br>Check that the key is valid, billing is on, and <b>Maps JavaScript API</b> is enabled.';};
+  document.head.appendChild(s);
+}
+
+/* find where the user is, then build the mirror world there */
+async function startRealWorld(){
+  udStatus('Finding where you are…');
+  const saved=JSON.parse(localStorage.getItem('hush.home')||'null');
+  const center=await new Promise(res=>{
+    if(!navigator.geolocation)return res(saved||{lat:22.5431,lng:114.0579});
+    navigator.geolocation.getCurrentPosition(
+      p=>{const c={lat:p.coords.latitude,lng:p.coords.longitude};
+        localStorage.setItem('hush.home',JSON.stringify(c));res(c);},
+      ()=>res(saved||{lat:22.5431,lng:114.0579}),{timeout:8000,enableHighAccuracy:true});
+  });
+  await build3D(center);
+  loadNearby(center);
+}
+
+/* photorealistic 3D (free while in preview) → falls back to tilted satellite */
+async function build3D(center){
+  const host=document.getElementById('gmap'); host.innerHTML='';
+  try{
+    const {Map3DElement,MapMode}=await google.maps.importLibrary('maps3d');
+    gmap=new Map3DElement({
+      center:{...center,altitude:60}, range:520, tilt:67, heading:20,
+      mode:(MapMode&&MapMode.HYBRID)||'HYBRID', defaultUIDisabled:true});
+    host.appendChild(gmap);
+    gmap3d=true; udStatus('The Upside Down · your street, turned over');
+  }catch(e){
+    gmap=new google.maps.Map(host,{center,zoom:18,mapTypeId:'satellite',tilt:45,heading:20,
+      disableDefaultUI:true,gestureHandling:'greedy',backgroundColor:'#0d1226'});
+    gmap3d=false; udStatus('3D unavailable — showing satellite. (Enable Map Tiles API for full 3D)');
+  }
+}
+
+/* real buildings around you → become the town's places */
+async function loadNearby(center){
+  const box=document.getElementById('nearby'); box.innerHTML='';
+  let list=[];
+  try{
+    const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary('places');
+    const {places}=await Place.searchNearby({
+      fields:['displayName','location','primaryTypeDisplayName','types'],
+      locationRestriction:{center,radius:350}, maxResultCount:12,
+      rankPreference:SearchNearbyRankPreference.DISTANCE});
+    list=places.map(p=>({name:p.displayName||'—',
+      type:(p.primaryTypeDisplayName||(p.types&&p.types[0])||'place').toString().replace(/_/g,' '),
+      loc:{lat:p.location.lat(),lng:p.location.lng()}}));
+  }catch(e){ udStatus('Nearby places need the Places API (New) enabled.'); }
+  if(!list.length){box.innerHTML='<div class="nb"><b>Nothing nearby</b><span>quiet out there tonight</span></div>';return;}
+  /* the closest real building becomes the Inn; the next few become the other rooms */
+  const rooms=PLACES.filter(p=>!p.locked);
+  list.forEach((n,i)=>{
+    const room=rooms[i];
+    const el=document.createElement('div');
+    el.className='nb'+(room?' host':'');
+    el.innerHTML=`<b>${esc(n.name)}</b><span>${room?room.ic+' '+room.name:esc(n.type)}</span>`;
+    el.onclick=()=>{flyTo(n.loc); if(room)selectPlace(room.id,null);};
+    box.appendChild(el);
+  });
+  udStatus(`${list.length} places around you · the nearest one is tonight's inn`);
+}
+function flyTo(loc){
+  if(!gmap)return;
+  if(gmap3d&&gmap.flyCameraTo) gmap.flyCameraTo({endCamera:{center:{...loc,altitude:50},range:280,tilt:70},durationMillis:2200});
+  else if(freeMap&&gmap===freeMap) freeMap.flyTo({center:[loc.lng,loc.lat],zoom:18.4,pitch:66,duration:2200});
+  else if(gmap.panTo) gmap.panTo(loc);
+}
+window.initRealMap=()=>{};
+
+/* ══════════ day views ══════════ */
+function renderTown(){
+  const n=DB.diary.length;
+  document.getElementById('townline').textContent=n?`${n} night${n>1?'s':''} kept so far`:'The inn is closed for the day';
+  buildMap();initMapGestures();closeSheet();setMapMode(mapMode);
+  requestAnimationFrame(()=>{mapReset();});}
+function renderBook(){const d=DB.diary,el=document.getElementById('booklist');
+  if(!d.length){el.innerHTML='<div class="empty">Nothing yet. Tonight\'s page is still blank.</div>';return;}
+  const icon={diary:'📓',tarot:'🔮',mood:'🎧',letter:'✉️'};
+  el.innerHTML=d.map(e=>`<div class="entry"><div class="d">${icon[e.kind]||'·'} ${e.date}
+    ${e.mood?`<span class="mood">${e.mood}</span>`:''}</div><div class="tx">${esc(e.text)}</div></div>`).join('');}
+function renderPost(){const L=DB.letters,el=document.getElementById('postlist');
+  if(!L.length){el.innerHTML='<div class="empty">No sealed letters. Write one tonight.</div>';return;}
+  el.innerHTML=L.map((l,i)=>`<div class="entry"><div class="d">✉️ ${l.date} ${l.sent?'<span class="mood">sent</span>':''}</div>
+    <div class="tx">${esc(l.text.slice(0,90))}${l.text.length>90?'…':''}</div>
+    ${l.sent?'':`<button class="btn sm" onclick="sendLetter(${i})">Mail it</button>`}</div>`).join('');}
+function sendLetter(i){const L=DB.letters;L[i].sent=true;DB.letters=L;renderPost();
+  speak('Your letter is on its way.');}
+const STRANGERS=[
+ ['A stranger, two towns over','I don\'t know who you are, but I hope today was kinder than yesterday. Mine was.'],
+ ['Someone who couldn\'t sleep either','I wrote this at 3am. If you\'re reading it at 3am too — hi. We\'re both still here.'],
+ ['A tired person','Nobody told me being an adult was mostly just being tired politely. Rest, okay?'],
+ ['Someone on the other side','I\'m proud of you for the thing nobody noticed you did this week.']];
+function pickLetter(){const s=STRANGERS[Math.floor(Math.random()*STRANGERS.length)];
+  document.getElementById('boxbody').innerHTML=
+    `<div class="letterpaper"><div class="lmeta">FROM — ${s[0]}</div>${s[1]}</div>
+     <button class="btn ghost sm" onclick="warmth(this)">Send warmth back 🕯</button>`;}
+function warmth(b){b.textContent='Warmth sent 🕯';b.disabled=true;}
+function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ══════════ backend bridge ══════════
+   Backend up  → real LLM replies, ElevenLabs voice, shared letter box, SQLite.
+   Backend off → everything above still works locally.                      */
+let API=null;
+async function api(path,body){
+  const r=await fetch('/api'+path,{method:body?'POST':'GET',
+    headers:body?{'Content-Type':'application/json'}:undefined,
+    body:body?JSON.stringify(body):undefined});
+  if(!r.ok)throw new Error(r.status); return r.json();
+}
+async function voice(text){                       /* server TTS → browser voice */
+  if(API&&API.tts){
+    try{const r=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text})});
+      if(r.ok){const a=new Audio(URL.createObjectURL(await r.blob()));a.play();return;}}catch(e){}
+  }
+  speak(text);
+}
+function tonight(){return DB.diary.slice(0,3).map(e=>e.text).join(' / ');}
+
+(async()=>{
+  try{API=await api('/health');}catch(e){return;}
+  if(!API||!API.ok){API=null;return;}
+  console.log('Hush backend:',API.provider,API.tts?'+ElevenLabs':'');
+
+  /* diary → empathic reply from the model, then keep it */
+  saveDiary=async function(){
+    const t=document.getElementById('ta-diary').value.trim();
+    if(!t){say('b-diary','Nothing yet — say a few words first.');return;}
+    say('b-diary','…');
+    let reply='Kept in your diary.',mood=moodFromText(t);
+    try{const r=await api('/chat',{text:t,room:'diary',context:tonight()});reply=r.reply;mood=r.mood;}catch(e){}
+    addEntry('diary',t,mood);
+    try{await api('/entries',{kind:'diary',text:t,mood});}catch(e){}
+    document.getElementById('ta-diary').value='';
+    say('b-diary',reply);voice(reply);
+    setTimeout(()=>go('hub'),3200);
+  };
+
+  /* letter → sealed on the server so a stranger can find it */
+  saveLetter=async function(){
+    const t=document.getElementById('ta-letter').value.trim();
+    if(!t){say('b-letter','Write a line or two, then I\'ll seal it.');return;}
+    try{await api('/letters',{text:t});}catch(e){}
+    const L=DB.letters;L.unshift({text:t,date:today(),sent:false,ts:Date.now()});DB.letters=L;
+    addEntry('letter','Sealed a letter for the box.','hopeful');
+    document.getElementById('ta-letter').value='';
+    const m='Sealed. Mail it from the post office tomorrow.';
+    say('b-letter',m);voice(m);setTimeout(()=>go('hub'),1800);
+  };
+
+  /* tarot → reading written against what was said tonight */
+  drawCard=async function(){
+    document.getElementById('drawbtn').style.display='none';
+    const w=document.getElementById('cardwrap');w.style.display='block';
+    let c={glyph:'☾',card:'The Moon',reading:'Let it rest until morning.'};
+    try{c=await api('/tarot',{text:tonight()});}catch(e){}
+    document.getElementById('cardback').textContent=c.glyph;
+    setTimeout(()=>document.getElementById('card3d').classList.add('flip'),80);
+    setTimeout(()=>{
+      document.getElementById('tarot-txt').innerHTML=
+        `<div class="title" style="font-size:18px;margin-top:15px">${esc(c.card)}</div>
+         <div class="sub" style="color:#f0e6dc;font-size:13.5px">${esc(c.reading)}</div>
+         <button class="btn ghost sm" onclick="go('hub')">Back to the hall</button>`;
+      addEntry('tarot',c.card+' — '+c.reading,'reflective');
+      api('/entries',{kind:'tarot',text:c.card+' — '+c.reading,mood:'reflective'}).catch(()=>{});
+      voice(c.reading);
+    },1050);
+  };
+
+  /* the public box is now really shared */
+  pickLetter=async function(){
+    let s={from:'someone who couldn\'t sleep',text:'…',id:0};
+    try{s=await api('/box');}catch(e){}
+    document.getElementById('boxbody').innerHTML=
+      `<div class="letterpaper"><div class="lmeta">FROM — ${esc(s.from)}</div>${esc(s.text)}</div>
+       <button class="btn ghost sm" onclick="warmth(this,${s.id})">Send warmth back 🕯</button>`;
+  };
+  warmth=function(b,id){b.textContent='Warmth sent 🕯';b.disabled=true;
+    if(id)api('/box/'+id+'/warmth',{}).catch(()=>{});};
+
+  /* morning letter written by the model */
+  const oldGo=go;
+  go=function(id){oldGo(id);
+    if(id==='morning'){api('/morning',{}).then(m=>{
+      const el=document.querySelector('#morning .book');
+      if(el&&m.letter)el.innerHTML=`<div class="entry"><div class="d">✉️ a letter from the inn</div>
+        <div class="tx" style="white-space:pre-wrap">${esc(m.letter)}</div></div>`;
+    }).catch(()=>{});}
+  };
+})();
+
+/* ══════════ boot ══════════ */
+const bootParams=new URLSearchParams(location.search);if(bootParams.get('journey')==='1'){['hush.setup','hush.phase','hush.openedAt','hush.closedAt'].forEach(k=>localStorage.removeItem(k));}
+applyInn();buildPicker();buildChips();
+document.getElementById('innname').value=localStorage.getItem('hush.innname')||'';
+setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=
+  String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');},1000);
+if(bootParams.get('screen')==='town')go('town');
+else if(bootParams.get('screen')==='day')go('dayroom');
+else if(localStorage.getItem('hush.phase')==='day')go('dayroom');
+else {go('arrival');syncArrival();}
+</script>
+<script type="module" src="hush_3d.js"></script>
+<script type="module" src="hush_night_3d.js"></script>
+<script type="module" src="hush_interior_3d.js?v=20260907"></script>
+<script type="module" src="hush_day_interior_3d.js?v=20260907"></script>
+</body>
+</html>

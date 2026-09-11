@@ -31,7 +31,7 @@ if _env.exists():
 
 try:
     import requests
-    from fastapi import FastAPI, Response, HTTPException
+    from fastapi import FastAPI, Response, HTTPException, UploadFile
     from fastapi.staticfiles import StaticFiles
     from fastapi.middleware.cors import CORSMiddleware
     from pydantic import BaseModel
@@ -221,6 +221,27 @@ CHAT_SYS = """You are the night host of "Hush", a tiny inn for people who can't 
 Speak warmly, in 1-3 short sentences, like someone sitting beside them in a dim room.
 Never diagnose, never give tasks or advice unless asked, never moralise. Plain text only."""
 
+# ── check if user's thought is complete ──
+COMPLETE_SYS = """Is this thought or reflection complete enough? Answer with ONLY "yes" or "no".
+Consider: does it have a clear endpoint, or does it feel unfinished/trailing off?
+For diary/letter context, "complete" means the person has said what they need to say."""
+
+
+def is_complete(text: str, room: str = "diary") -> bool:
+    """Heuristic: if >20 words or 2+ sentences, likely complete. LLM can refine."""
+    if not text.strip():
+        return False
+    words = len(text.split())
+    sentences = text.count('.') + text.count('!') + text.count('?')
+    # Simple rule: >15 words OR 2+ sentences → likely complete
+    if words > 15 or sentences >= 2:
+        return True
+    # Ask LLM if uncertain
+    result = llm(COMPLETE_SYS, text, max_tokens=10)
+    if result:
+        return "yes" in result.lower()
+    return words > 10  # fallback
+
 
 @app.post("/api/chat")
 def chat(inp: TextIn):
@@ -228,7 +249,7 @@ def chat(inp: TextIn):
     if not text:
         raise HTTPException(400, "empty")
     if scan_crisis(text):
-        return {"reply": SAFE_REPLY, "mood": "fragile", "safety": True}
+        return {"reply": SAFE_REPLY, "mood": "fragile", "safety": True, "complete": True}
     room = inp.room or "letter"
     hint = {"diary": "They are writing a diary only for themselves.",
             "letter": "They are writing to a stranger who will read it tomorrow.",
@@ -237,7 +258,8 @@ def chat(inp: TextIn):
     if not reply:
         reply = ("I hear you. Today asked a lot of you — you can set it down here, "
                  "you don't have to carry it into the night.")
-    return {"reply": reply.strip(), "mood": guess_mood(text), "safety": False}
+    complete = is_complete(text, room)
+    return {"reply": reply.strip(), "mood": guess_mood(text), "safety": False, "complete": complete}
 
 
 def guess_mood(t: str) -> str:
@@ -351,6 +373,27 @@ def warmth(bid: int):
         c.execute("UPDATE public_box SET warmth=warmth+1 WHERE id=?", (bid,))
     return {"ok": True}
 
+
+# ── ASR (Deepgram nova-3) ──
+DEEPGRAM_KEY = os.environ.get("DEEPGRAM_API_KEY", "")
+@app.post("/api/asr")
+async def asr(file: UploadFile):
+    if not DEEPGRAM_KEY:
+        raise HTTPException(404, "asr not configured")
+    audio = await file.read()
+    if not audio:
+        raise HTTPException(400, "empty audio")
+    r = requests.post(
+        "https://api.deepgram.com/v1/listen",
+        params={"model": "nova-3", "smart_format": "true", "language": "en"},
+        headers={"Authorization": f"Token {DEEPGRAM_KEY}",
+                 "Content-Type": file.content_type or "audio/webm"},
+        data=audio, timeout=30,
+    )
+    if not r.ok:
+        raise HTTPException(502, f"deepgram {r.status_code}")
+    alts = r.json()["results"]["channels"][0]["alternatives"]
+    return {"text": alts[0]["transcript"].strip() if alts else ""}
 
 # ── TTS (cached on disk so repeated lines cost nothing) ──
 @app.post("/api/tts")

@@ -1,0 +1,32 @@
+#interior{background:#100f1c url('assets/models/interior-night-preview.png') center/cover no-repeat}
+#interior3d,#dayroom3d{width:100%;height:100%;touch-action:none;display:block}
+#interior .content,#interior .scrim{pointer-events:none}
+.night-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.night-links button,.night-rest{font:500 12px var(--sans);padding:12px 8px;border:1px solid #f4c88a30;border-radius:12px;background:#ffffff06;color:#dccbb6;cursor:pointer}
+.night-rest{display:block;width:100%;margin-top:12px;color:#f4c88a}
+#hub .nightui{overflow-y:auto}
+#dayroom{background:#bfa786 url('assets/models/interior-day-preview.png') center/cover no-repeat}
+.dayroomscene{background:transparent!important}
+.dayroomscene:after{background:linear-gradient(180deg,rgba(28,23,16,.35),transparent 20%,transparent 65%,rgba(28,17,9,.82))!important}
+.morning-ui{position:absolute;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:calc(22px + env(safe-area-inset-top)) 20px calc(22px + env(safe-area-inset-bottom))}
+.morning-ui button,.morning-ui select{pointer-events:auto}
+.morning-ui .brand{font-size:12px;letter-spacing:2px}.morning-ui .badge{font-size:10px;background:#2b201a88;color:#ffebcc}
+.morning-summary{text-align:center}.morning-summary h1{font:600 23px var(--serif);margin:7px 0}.morning-summary p{font-size:11px;color:#ded0bb;line-height:1.5}
+.morning-links{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:13px}.morning-links button{border:1px solid #dfc8a744;background:#2d201a88;color:#f2dec0;padding:7px 10px;border-radius:20px;font-size:10px}
+.return-night{margin-top:13px;background:none;border:0;color:#dac2a1;font:11px var(--sans);text-decoration:underline;text-underline-offset:4px}
+#stay-picker{display:block;max-width:100%;padding:6px 10px;margin-top:10px;background:#312820bb;border:1px solid #edd4aa55;color:#f6e3c2;border-radius:9px;font-size:11px}
+.room-hotspots{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+.room-hotspot{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;border:1px solid #eddcb3aa;color:#faebd2;background:#312217d9;border-radius:9px;padding:7px 9px;font:500 10px var(--sans);white-space:nowrap;box-shadow:0 3px 12px #20110844;cursor:pointer}
+.room-hotspot:after{content:'';position:absolute;top:100%;left:50%;height:14px;width:1px;background:#f4d7a8;pointer-events:none}
+.room-hotspot[data-empty=true]{background:#41382cbf;color:#e5d4b8}
+#roomrecord{background:radial-gradient(ellipse at top,#574436,#211b17 70%)}
+#roomrecord .entry{border-bottom:1px solid #ffffff13;padding:18px 0}.saved-card-title{font:500 24px var(--serif);margin:12px 0;color:#f0cc8d}
+#waking{background:radial-gradient(ellipse at 70% 20%,#715232,#19151c 75%)}
+#waking .content{justify-content:center;text-align:center}.wake-sun{color:#e8c790;font-size:44px;margin-bottom:22px}
+#waking .btn{max-width:280px;margin:24px auto 0;width:100%}
+@media(max-height:700px){.morning-summary h1{font-size:19px}.morning-ui{padding-bottom:12px}.morning-links{margin-top:8px}.room-hotspot{font-size:9px;padding:6px}.night-links button{padding:9px}}
+@media(prefers-reduced-motion:reduce){#interior3d,.scr{animation:none!important}}
+
+#stay-picker[hidden],.room-hotspot[hidden]{display:none}
+.room-hotspot[data-review=letters]{transform:translate(-55%,-150%)}
+.host-kept-reply{margin-top:12px;padding:12px;border-left:2px solid #c6a579;color:#d5c7b6;background:#ffffff05}

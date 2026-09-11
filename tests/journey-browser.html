@@ -1,0 +1,61 @@
+<!doctype html><meta charset="utf-8"><title>Hush journey verification</title>
+<style>body{margin:20px;background:#171819;color:#eee;font:14px system-ui}button{padding:10px 16px}iframe{width:390px;height:844px;border:1px solid #555;float:right}pre{white-space:pre-wrap;line-height:1.8;max-width:700px}</style>
+<h1>Hush · isolated journey verification</h1><p>Uses memory-only fixture storage and blocks backend calls. Your real records are untouched.</p><button id="run">Run journey</button><pre id="results"></pre><div id="device"></div>
+<script>
+const result=document.getElementById('results');const report=(message)=>{result.textContent+=message+'\n'};
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(test,label,timeout=20000){const start=Date.now();while(Date.now()-start<timeout){if(test())return;await pause(80)}throw Error('Timed out: '+label)}
+function check(value,message){if(!value)throw Error(message);report('PASS · '+message)}
+let frame,w;
+async function launch(records={}){
+ let html=await(await fetch('/hush_app.html?test-build=journey-2')).text();
+ const seed={'hush.setup':'1','hush.innname':'Fox',...records};
+ const shim=`<base href="${location.origin}/"><script>
+const __testMap=new Map(Object.entries(${JSON.stringify(seed)}));
+const localStorage={getItem:k=>__testMap.get(k)??null,setItem:(k,v)=>__testMap.set(k,String(v)),removeItem:k=>__testMap.delete(k)};
+window.__testSnapshot=()=>Object.fromEntries(__testMap);
+window.SpeechRecognition=undefined;window.webkitSpeechRecognition=undefined;
+const __nativeFetch=window.fetch.bind(window);window.fetch=(url,options)=>String(url).includes('/api/')?Promise.reject(Error('Backend disabled for fixture')):__nativeFetch(url,options);
+window.__testErrors=[];addEventListener('error',e=>window.__testErrors.push(e.message));
+<`+`/script>`;
+ html=html.replace('<head>','<head>'+shim);
+ frame?.remove();frame=document.createElement('iframe');frame.srcdoc=html;document.getElementById('device').append(frame);
+ await new Promise(resolve=>frame.onload=resolve);w=frame.contentWindow;w.speak=()=>{};w.startHubVoiceLoop=()=>{};
+ await until(()=>w.document.querySelector('#interior3d').dataset.ready==='true','night model loaded');
+}
+const screen=()=>w.document.querySelector('.scr.on')?.id;
+const click=selector=>{const b=w.document.querySelector(selector);if(!b)throw Error('Missing control '+selector);b.click()};
+async function run(){
+ document.getElementById('run').disabled=true;result.textContent='';
+ try{
+  await launch();check(screen()==='arrival','returning user starts at the door without host setup');
+  click('#arrival-btn');click('#openingmodal .btn');await until(()=>screen()==='interior','night reveal');check(w.document.querySelector('#interior3d').dataset.phase==='night','step inside shows the NIGHT model');
+  await until(()=>screen()==='hub','host dialogue');await until(()=>w.document.querySelectorAll('#replychips button').length>0,'Fox check-in');
+  for(let i=0;i<3;i++){click('#replychips button');await pause(360)}
+  check(w.HushJourney.active().checkinComplete,'Fox check-in saved');
+  click('.night-links button[onclick="go(\'diary\')"]');w.document.getElementById('ta-diary').value='Fixture diary: the train ride made me feel calmer.';click('#diary button[onclick="saveDiary()"]');await until(()=>screen()==='hub','diary return');
+  check(w.HushJourney.active().checkinComplete,'returning from diary preserves check-in');
+  click('.night-links button[onclick="go(\'letter\')"]');w.document.getElementById('ta-letter').value='Fixture letter: I hope your morning is gentle.';click('#letter button[onclick="saveLetter()"]');await until(()=>screen()==='hub','letter return');
+  click('.night-links button[onclick="go(\'tarot\')"]');click('#drawbtn');await until(()=>w.document.getElementById('tarot-txt').textContent.includes('Back to the hall'),'tarot saved');const cardText=w.document.getElementById('tarot-txt').textContent;click('#tarot-txt button');
+  click('#hub .night-rest');check(screen()==='sleeping'&&w.HushJourney.phase()==='sleeping','rest stays at NIGHT; no premature daylight');
+  const afterSleep=w.__testSnapshot();await launch(afterSleep);check(screen()==='sleeping','reload resumes the sleeping state');
+  click('#sleeping button[onclick="showWakeGreeting()"]');check(screen()==='waking','wake first shows Fox’s morning greeting');check(w.HushJourney.phase()==='sleeping','morning is not committed before entering');
+  click('#morning-enter');await until(()=>screen()==='dayroom','day room');await until(()=>w.document.querySelector('#dayroom3d').dataset.ready==='true','day model');
+  check(w.document.querySelector('#dayroom3d').dataset.phase==='day','wake enters the DAY model');
+  let data=w.HushJourney.records();check(data.diary.length===1&&data.letters.length===1&&data.tarot.length===1,'diary, letter and tarot belong to the completed night');check(data.conversation.length===6,'Fox check-in conversation is kept');
+  await until(()=>JSON.parse(w.document.querySelector('#dayroom3d').dataset.records||'{}').tarot===1,'3D activity objects refreshed');check(true,'3D pages, envelope and saved card reflect the night’s data');
+  click('.room-hotspot[data-review="diary"]');check(screen()==='roomrecord'&&w.document.getElementById('roomrecord-list').textContent.includes('train ride'),'journal object opens saved diary');click('#roomrecord .back');
+  click('.room-hotspot[data-review="letters"]');check(w.document.getElementById('roomrecord-list').textContent.includes('morning is gentle'),'letter chest opens full saved letter');click('#roomrecord .back');
+  click('.room-hotspot[data-review="tarot"]');check(w.document.getElementById('roomrecord-list').textContent.includes(data.tarot[0].reading),'tarot object opens original reading');check(w.HushJourney.records().tarot.length===1,'reviewing tarot does not draw another card');click('#roomrecord .back');
+  const afterWake=w.__testSnapshot();await launch(afterWake);check(screen()==='dayroom','reload preserves the completed morning');
+  click('.return-night');click('#arrival-btn');click('#openingmodal .btn');await until(()=>screen()==='interior','second night');check(w.HushJourney.sessions().length===2,'another visit starts a distinct night');
+  check(w.HushJourney.records().diary[0].text.includes('train ride'),'previous night remains available');
+  check(w.__testErrors.length===0,'no JavaScript runtime errors');
+  // Finish on the completed morning for visual inspection of object labels.
+  await launch(afterWake);await until(()=>w.document.querySelector('#dayroom3d').dataset.ready==='true','final day preview');
+  report('ALL JOURNEY CHECKS PASSED');document.body.dataset.testResult='passed';
+ }catch(error){report('FAIL · '+error.message);document.body.dataset.testResult='failed';console.error(error)}
+ finally{document.getElementById('run').disabled=false}
+}
+document.getElementById('run').onclick=run;
+</script>

@@ -1,0 +1,230 @@
+<title>Hush 产品方案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --paper:#FFFFFF; --ink:#17162A; --muted:#66637A; --rule:#D8D6E2; --wash:#F4F3F8;
+    --night:#24214A; --lamp:#B67A1E; --lamp-tint:#FBF1DF; --desk:#E6E4EC;
+    --sans:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    --mark:"Fraunces",Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box}
+  html,body{background:var(--desk);color:var(--ink)}
+  body{font-family:var(--sans);font-size:10.2px;line-height:1.45;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  .desk{overflow-x:auto;padding:28px 12px}
+  .page{width:794px;min-height:1122px;margin:0 auto;background:var(--paper);padding:22px 44px 10px;
+    box-shadow:0 1px 2px rgba(23,22,42,.08),0 12px 40px rgba(23,22,42,.12);display:flex;flex-direction:column;gap:8px}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding-bottom:9px;border-bottom:1.5px solid var(--ink)}
+  .name{display:flex;align-items:baseline;gap:10px}
+  .wordmark{font-family:var(--mark);font-weight:600;font-size:25px;letter-spacing:.14em;line-height:1}
+  .subtitle{font-size:12.5px;color:var(--muted)}
+  .links{text-align:right;font-size:10px;color:var(--muted);line-height:1.6}
+
+  section{display:flex;flex-direction:column;gap:5px}
+  h2{margin:0;font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;text-wrap:balance}
+  h2 .n{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:4px;background:var(--night);color:#fff;font-size:10.5px;font-weight:500}
+  p{margin:0}
+  .lead{color:var(--ink)}
+  b,strong{font-weight:700}
+  .src{color:var(--muted);font-size:10px}
+  .key{background:var(--lamp-tint);color:#7A4E0C;padding:0 3px;border-radius:2px;font-weight:700}
+
+  .pains{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pain{border:1px solid var(--rule);padding:5px 9px}
+  .pain h3{margin:0 0 2px;font-size:10.6px;font-weight:700}
+  .pain ul{margin:0;padding-left:14px;display:flex;flex-direction:column;gap:1px}
+  .tag{display:inline-block;font-size:9.5px;font-weight:700;color:var(--night);margin-right:3px}
+
+  table{width:100%;border-collapse:collapse;font-size:10px}
+  th,td{border:1px solid var(--rule);padding:2.5px 6px;text-align:left;vertical-align:top}
+  th{background:var(--wash);font-weight:700}
+  td.k{font-weight:700;white-space:nowrap;width:1%}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+
+  .lane-wrap{border:1px solid var(--rule);padding:4px 6px 2px}
+  svg{display:block;width:100%;height:auto}
+  .legend{font-size:9.5px;color:var(--muted)}
+
+  footer{margin-top:auto;padding-top:5px;border-top:1px solid var(--rule);font-size:9.5px;color:var(--muted)}
+
+  @media print{
+    @page{size:A4;margin:0}
+    html,body{background:var(--paper)}
+    .desk{padding:0;overflow:visible}
+    .page{box-shadow:none;margin:0}
+  }
+</style>
+
+<div class="desk">
+<article class="page">
+
+  <header>
+    <div class="name">
+      <span class="wordmark">HUSH</span>
+      <span class="subtitle">午夜旅馆 · 闭眼语音睡前陪伴 · 产品方案</span>
+    </div>
+    <div class="links">原型：Web v1（hush_app.html，本地运行）<br>语音链路：Deepgram 识别 · DeepSeek 回应 · ElevenLabs 发声</div>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span>目标用户与痛点</h2>
+    <p class="lead">睡不着的时候，人想要的其实是<b>有人听一下，然后安心睡着</b>。现有产品在这一步只留下两类成本：生理成本（为了交互必须睁眼、看亮屏）和心理成本（没人接住，或被"指导"得更累）。我们从这两类成本都最高的场景切入：深夜，躺在床上。</p>
+    <p><b>核心用户：22–35 岁、独居或晚睡的城市年轻人。躺下后脑子停不下来，会拿起手机；试过冥想 App，但不喜欢被指导的语气。</b></p>
+    <div class="pains">
+      <div class="pain">
+        <h3>痛点 A · 睁眼的代价</h3>
+        <ul>
+          <li><span class="tag">A1</span><b>想说话就得看屏幕：</b>打字、点按钮都要睁眼，屏幕一亮人又醒了。</li>
+          <li><span class="tag">A2</span><b>放不下手机：</b>没有东西能接替手机，于是刷到后半夜。</li>
+          <li><span class="tag">A3</span><b>醒来什么都没留下：</b>昨晚想了什么、睡了多久，第二天说不清。</li>
+        </ul>
+      </div>
+      <div class="pain">
+        <h3>痛点 B · 没人接住</h3>
+        <ul>
+          <li><span class="tag">B1</span><b>凌晨没人可说：</b>朋友都睡了，心里的事只能在脑子里转。</li>
+          <li><span class="tag">B2</span><b>被"指导"很累：</b>冥想 App 要你深呼吸、数羊，像又一项任务；AI 恋人又太近，像在演一段关系。</li>
+        </ul>
+      </div>
+    </div>
+    <table>
+      <colgroup><col style="width:58%"><col></colgroup>
+      <tr><th>核心数据</th><th>来源与调研条件</th></tr>
+      <tr><td><b>睡前在床上每多用 1 小时屏幕，失眠症状风险高 59%</b>，睡眠时长少约 24 分钟</td><td>Hjetland 等，<i>Frontiers in Psychiatry</i>，2025 年 3 月，挪威 45,202 名 18–28 岁大学生</td></tr>
+      <tr><td><b>心理健康类 App 需求降到历史低点</b>：用户并非不需要帮助，而是对"让自己变更好"的叙事疲惫</td><td>Appfigures 应用商店下载数据报告，2024 年 5 月</td></tr>
+      <tr><td><b>AI 陪伴 App 2025 上半年下载 6000 万次，同比 +88%</b>；全年收入预计 1.2 亿美元，说明"跟 AI 说心事"已有付费意愿</td><td>Appfigures 数据，TechCrunch 报道，2025 年 8 月</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>核心流程：用户与系统的交互</h2>
+    <p class="lead">设计原则是<b>把睡前最后一段对话从屏幕里拿出来</b>：推门之后屏幕全黑，全程只用声音；整晚只有开店、关店两次需要睁眼点屏。说完停顿 2.6 秒自动发送，Fox 说话时自动关麦。说 goodnight 后旅馆开始计时：<span class="key">营业时长 = 睡眠时长</span>，醒来关店，时长留在早晨房间。</p>
+    <div class="lane-wrap">
+      <svg viewBox="0 0 706 174" role="img" aria-label="泳道图：用户、手机、AI 语音、早晨房间四条泳道，12 个步骤从推门开店到早晨查看睡眠时长">
+        <defs>
+          <marker id="ar" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 z" fill="#17162A"/></marker>
+        </defs>
+        <g font-size="9" font-weight="700" fill="#17162A">
+          <text x="2" y="25">用户</text><text x="2" y="36" font-size="8" font-weight="400" fill="#66637A">闭眼</text>
+          <text x="2" y="67">手机</text><text x="2" y="78" font-size="8" font-weight="400" fill="#66637A">暗屏</text>
+          <text x="2" y="109">AI 语音</text><text x="2" y="120" font-size="8" font-weight="400" fill="#66637A">识别·回应·发声</text>
+          <text x="2" y="151">早晨房间</text><text x="2" y="162" font-size="8" font-weight="400" fill="#66637A">醒来后</text>
+        </g>
+        <g stroke="#D8D6E2" stroke-width="1">
+          <line x1="0" y1="48" x2="706" y2="48"/><line x1="0" y1="90" x2="706" y2="90"/><line x1="0" y1="132" x2="706" y2="132"/>
+        </g>
+
+        <g stroke="#17162A" stroke-width="1" fill="none" marker-end="url(#ar)">
+          <line x1="125.5" y1="42" x2="125.5" y2="95"/>
+          <line x1="176.5" y1="96" x2="176.5" y2="43"/>
+          <line x1="227.5" y1="42" x2="227.5" y2="95"/>
+          <line x1="278.5" y1="96" x2="278.5" y2="43"/>
+          <line x1="329.5" y1="42" x2="329.5" y2="53"/>
+          <line x1="380.5" y1="54" x2="380.5" y2="43"/>
+          <line x1="431.5" y1="42" x2="431.5" y2="95"/>
+          <line x1="482.5" y1="96" x2="482.5" y2="43"/>
+          <line x1="533.5" y1="42" x2="533.5" y2="53"/>
+          <line x1="584.5" y1="54" x2="584.5" y2="43"/>
+          <line x1="635.5" y1="42" x2="635.5" y2="137"/>
+        </g>
+
+        <g font-size="8.6" text-anchor="middle">
+          <!-- user actions: filled ink -->
+          <g fill="#17162A"><rect x="58" y="12" width="84" height="30"/><rect x="160" y="12" width="84" height="30"/><rect x="262" y="12" width="84" height="30"/><rect x="364" y="12" width="84" height="30"/><rect x="466" y="12" width="84" height="30"/><rect x="568" y="12" width="84" height="30"/></g>
+          <g fill="#FFFFFF">
+            <text x="100" y="25">推门开店</text><text x="100" y="36" font-size="8">点一次屏 A1</text>
+            <text x="202" y="25">闭眼回答</text><text x="202" y="36" font-size="8">不看屏幕 A1</text>
+            <text x="304" y="25">说 yes 进房</text><text x="304" y="36" font-size="8">也可不去 B2</text>
+            <text x="406" y="25">倾诉·抽牌·听雨</text><text x="406" y="36" font-size="8">说完即可 B1</text>
+            <text x="508" y="25">说 goodnight</text><text x="508" y="36" font-size="8">自动存档 A2</text>
+            <text x="610" y="25">醒来 · 关店</text><text x="610" y="36" font-size="8">第二次点屏</text>
+          </g>
+          <!-- system steps: outlined -->
+          <g fill="#FFFFFF" stroke="#17162A" stroke-width="1">
+            <rect x="109" y="96" width="84" height="30"/><rect x="211" y="96" width="84" height="30"/><rect x="415" y="96" width="84" height="30"/>
+            <rect x="313" y="54" width="84" height="30"/><rect x="619" y="138" width="84" height="30"/>
+          </g>
+          <rect x="517" y="54" width="84" height="30" fill="#FBF1DF" stroke="#B67A1E" stroke-width="1.3"/>
+          <g fill="#17162A">
+            <text x="151" y="109">Fox 开口</text><text x="151" y="120" font-size="8" fill="#66637A">三问 check-in</text>
+            <text x="253" y="109">停 2.6 秒判停</text><text x="253" y="120" font-size="8" fill="#66637A">转写·推荐房间</text>
+            <text x="355" y="67">进房自动开麦</text><text x="355" y="78" font-size="8" fill="#66637A">念出能说的话</text>
+            <text x="457" y="109">共情回应</text><text x="457" y="120" font-size="8" fill="#66637A">说话时关麦 B2</text>
+            <text x="559" y="67" fill="#7A4E0C" font-weight="700">熄屏·开始营业</text><text x="559" y="78" font-size="8" fill="#7A4E0C">计时 = 睡眠</text>
+            <text x="661" y="151">睡了 7h 12m</text><text x="661" y="162" font-size="8" fill="#66637A">回看夜里记录 A3</text>
+          </g>
+          <!-- step numbers -->
+          <g font-size="7.5" font-weight="700">
+            <g fill="#FFFFFF" stroke="#17162A" stroke-width="1">
+              <circle cx="60" cy="12" r="6.5"/><circle cx="111" cy="96" r="6.5"/><circle cx="162" cy="12" r="6.5"/><circle cx="213" cy="96" r="6.5"/>
+              <circle cx="264" cy="12" r="6.5"/><circle cx="315" cy="54" r="6.5"/><circle cx="366" cy="12" r="6.5"/><circle cx="417" cy="96" r="6.5"/>
+              <circle cx="468" cy="12" r="6.5"/><circle cx="519" cy="54" r="6.5"/><circle cx="570" cy="12" r="6.5"/><circle cx="621" cy="138" r="6.5"/>
+            </g>
+            <g fill="#17162A">
+              <text x="60" y="14.6">1</text><text x="111" y="98.6">2</text><text x="162" y="14.6">3</text><text x="213" y="98.6">4</text>
+              <text x="264" y="14.6">5</text><text x="315" y="56.6">6</text><text x="366" y="14.6">7</text><text x="417" y="98.6">8</text>
+              <text x="468" y="14.6">9</text><text x="519" y="56.6">10</text><text x="570" y="14.6">11</text><text x="621" y="140.6">12</text>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <p class="legend">深色框为用户动作，整晚只有 ① ⑪ 需要睁眼点屏；琥珀色框为"营业时长 = 睡眠时长"的起点；圆圈是步骤顺序，框内 A1–B2 对应所解决的痛点。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>夜晚与早晨分工</h2>
+    <p class="lead">按<b>眼睛是否睁开</b>分工。夜里人闭着眼、想睡着，只接收语音和短指令（"save it""draw a card""goodnight"），任何需要阅读、比较、做决定的环节都不放在夜里。早晨人醒了，才用屏幕回看这一晚。</p>
+    <div class="pair">
+      <table>
+        <colgroup><col><col></colgroup>
+        <tr><th colspan="2">夜晚 · 闭眼（开店到入睡）</th></tr>
+        <tr><td class="k">进入</td><td>点一次"推门"，之后屏幕全黑；Fox 先开口，不用找按钮（A1）</td></tr>
+        <tr><td class="k">引导</td><td>三个问题后推荐一个房间；说 yes 进入，不想去就接着聊（B2）</td></tr>
+        <tr><td class="k">房间</td><td>日记、写信、塔罗、音景全部可用语音操作；进门时 Fox 念出能说的话（A1）</td></tr>
+        <tr><td class="k">回应</td><td>只接住，不给建议、不说"你应该"；停顿 2.6 秒自动发送（B1、B2）</td></tr>
+        <tr><td class="k">入睡</td><td>说 goodnight：存档、熄屏，旅馆开始计营业时长（A2）</td></tr>
+      </table>
+      <table>
+        <colgroup><col><col></colgroup>
+        <tr><th colspan="2">早晨 · 睁眼（醒来后）</th></tr>
+        <tr><td class="k">关店</td><td>点"I'm awake · close the inn"，Fox 说出这一晚睡了多久</td></tr>
+        <tr><td class="k">时长</td><td><span class="key">营业时长 = 睡眠时长</span>，从 goodnight 到醒来；只记时长，不打分、不做连续打卡（A3）</td></tr>
+        <tr><td class="k">回看</td><td>日记、信、牌摆在早晨房间的桌上，点物件查看当晚原话与 Fox 的回应（A3）</td></tr>
+        <tr><td class="k">寄信</td><td>夜里封好的信第二天从邮局寄出，匿名给一位陌生人</td></tr>
+        <tr><td class="k">翻看</td><td>可切换查看之前的每一晚</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>异常、安全及隐私处理</h2>
+    <p class="lead">用户闭着眼，任何异常都<b>不能要求他睁眼处理</b>，也不能让屏幕突然亮起报错：先安静地补救，再降级到"至少还有人在说话"。夜里说的话属于高度私密内容，按数据生命周期处理；涉及危机时，安全优先于体验。</p>
+    <div class="pair">
+      <table>
+        <colgroup><col><col></colgroup>
+        <tr><th colspan="2">异常处理</th></tr>
+        <tr><td class="k">12 秒没说话</td><td>不打断、不报错，继续等；按钮随时可用</td></tr>
+        <tr><td class="k">房间有底噪</td><td>先测 0.6 秒环境底噪再定说话阈值，风扇声不会被当成"还在说"</td></tr>
+        <tr><td class="k">录到 Fox 自己</td><td>Fox 说话时关麦，说完再开</td></tr>
+        <tr><td class="k">语音合成失败</td><td>固定台词用缓存音频；新句子降级到系统语音</td></tr>
+        <tr><td class="k">模型或断网</td><td>用内置安抚句回应，当晚内容先存在本机</td></tr>
+        <tr><td class="k">没说 goodnight</td><td>只显示营业时长并注明未计时，不编造睡眠时长</td></tr>
+      </table>
+      <table>
+        <colgroup><col><col></colgroup>
+        <tr><th colspan="2">安全与隐私（按数据生命周期）</th></tr>
+        <tr><td class="k">危机</td><td>模型判断 + 关键词规则双保险，任一命中即走固定话术并给出求助信息，不做诊断</td></tr>
+        <tr><td class="k">采集</td><td>麦克风只在 Fox 不说话时打开；不采集体重、心率等身体数据</td></tr>
+        <tr><td class="k">使用</td><td>录音只用于转写，不保存音频；文字只用于当晚回应和早晨回看</td></tr>
+        <tr><td class="k">存储</td><td>日记和信保存在本机；API Key 只放在服务端</td></tr>
+        <tr><td class="k">量化</td><td>不给睡眠分数、不做 streak；时长只以"营业时间"出现</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <footer>原型中的角色 Fox、房间插画与背景音乐均为 AI 生成的虚构内容。Fox 是旅馆掌柜，不扮演朋友或恋人。技术链路与接口说明见 Hush-技术链路.md。</footer>
+
+</article>
+</div>
